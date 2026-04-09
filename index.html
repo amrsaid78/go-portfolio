@@ -593,23 +593,27 @@ function render() {
         let currentVal = item.qty * item.price;
         totalCurrentValue += currentVal;
 
-        let simulatedPerf = (Math.sin(index) * 15).toFixed(2); 
-        let costBasis = currentVal / (1 + (simulatedPerf/100));
+let simulatedPerf = ((Math.random() * 25) - 10).toFixed(2); 
+        
+        let costBasis = currentVal / (1 + (parseFloat(simulatedPerf) / 100));
         totalCostBasis += costBasis;
 
         if (parseFloat(simulatedPerf) > bestPerformance) {
             bestPerformance = parseFloat(simulatedPerf);
             bestSymbol = item.symbol.toUpperCase();
         }
+        
         if (parseFloat(simulatedPerf) < worstPerformance) {
             worstPerformance = parseFloat(simulatedPerf);
             worstSymbol = item.symbol.toUpperCase();
         }
-        
-        if (item.sector && sectorData.hasOwnProperty(item.sector)) {
+
+        if (item.sector) {
+            if (!sectorData.hasOwnProperty(item.sector)) {
+                sectorData[item.sector] = 0;
+            }
             sectorData[item.sector] += currentVal;
         }
-
         const marketFlag = item.market || '🇺🇸';
         const signal = getActionSignal(simulatedPerf);
 
