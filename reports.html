@@ -230,170 +230,136 @@
         </div>
     </div>
 
-    <script src="reports.js">
-        let portfolio = JSON.parse(localStorage.getItem('myPortfolio')) || [];
-const tableBody = document.querySelector('#reportsTable tbody');
-let chartInstance = null; // عشان نعرف نحدث الشارت لما نفلتر
+    // لاحظ إني شلت src="reports.js" عشان الكود يشتغل من الصفحة نفسها
+<script>
+    // 1. التأكد من سحب البيانات فوراً
+    let portfolio = JSON.parse(localStorage.getItem('myPortfolio')) || [];
+    const tableBody = document.querySelector('#reportsTable tbody');
+    let chartInstance = null;
 
-window.onload = () => {
-    renderReports();
-    initReportsChart([500, 1200, 900, 2300, 1800, 3500]); // داتا افتراضية
-};
+    window.onload = () => {
+        console.log("Portfolio Data Found:", portfolio); // عشان تتأكد في الـ Console
+        renderReports();
+        initReportsChart([500, 1200, 900, 2300, 1800, 3500]); 
+    };
 
-function renderReports(filterDays = 'all') {
-    if (!tableBody) return;
-    tableBody.innerHTML = '';
+    function renderReports(filterDays = 'all') {
+        if (!tableBody) return;
+        tableBody.innerHTML = '';
 
-    let totalValue = 0;
-    let bestPerf = -Infinity;
-    let worstPerf = Infinity;
-    let bestStockSymbol = 'N/A';
-    let worstStockSymbol = 'N/A';
+        let totalValue = 0;
+        let bestPerf = -Infinity;
+        let worstPerf = Infinity;
+        let bestStockSymbol = 'N/A';
+        let worstStockSymbol = 'N/A';
 
-    const today = new Date();
+        const today = new Date();
 
-    portfolio.forEach((item, index) => {
-        const currentVal = item.qty * item.price;
-        totalValue += currentVal;
-
-        // محاكاة لنسبة الربح
-        const simulatedPerf = Math.sin(index) * 15; 
-        
-        if (simulatedPerf > bestPerf) {
-            bestPerf = simulatedPerf;
-            bestStockSymbol = item.symbol.toUpperCase();
-        }
-        if (simulatedPerf < worstPerf) {
-            worstPerf = simulatedPerf;
-            worstStockSymbol = item.symbol.toUpperCase();
+        // لو المحفظة فاضية
+        if (portfolio.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color:var(--text-dim);">No transactions found. Add stocks from Dashboard first.</td></tr>`;
+            return;
         }
 
-        // توليد تاريخ
-        const date = new Date();
-        date.setDate(date.getDate() - (index * 3));
-        
-        // حساب الفارق بين الأيام عشان الفلتر
-        const diffTime = Math.abs(today - date);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        portfolio.forEach((item, index) => {
+            const currentVal = item.qty * item.price;
+            totalValue += currentVal;
 
-        // لو الفلتر متفعل والعملية أقدم من المدة المحددة، ما تظهرش في الجدول
-        if (filterDays !== 'all' && diffDays > filterDays) {
-            return; 
-        }
-
-        const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-
-        tableBody.innerHTML += `
-            <tr>
-                <td style="color: var(--text-dim);">${formattedDate}</td>
-                <td>
-                    <strong>${item.market || '🇺🇸'} ${item.symbol.toUpperCase()}</strong>
-                    <span class="company-name">${item.name}</span>
-                </td>
-                <td><span style="background: rgba(63, 185, 80, 0.1); color: var(--accent); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight:600;">BUY</span></td>
-                <td>${item.qty}</td>
-                <td>$${item.price.toFixed(2)}</td>
-                <td>$${currentVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-            </tr>`;
-    });
-
-    // تحديث الأرقام في الكروت
-    document.getElementById('totalValueReport').innerText = `$${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    
-    // حساب الضرائب والربح الصافي (افتراضياً إن الأرباح 20% من إجمالي المحفظة لغرض المحاكاة)
-    const simulatedProfit = totalValue * 0.20;
-    const estimatedTax = simulatedProfit * 0.15; // ضريبة 15%
-    const net = simulatedProfit - estimatedTax;
-
-    document.getElementById('taxValue').innerText = `$${estimatedTax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById('netProfit').innerText = `$${net.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-    if (portfolio.length > 0) {
-        document.getElementById('bestStock').innerText = `${bestStockSymbol} (+${bestPerf.toFixed(2)}%)`;
-        document.getElementById('worstStock').innerText = `${worstStockSymbol} (${worstPerf.toFixed(2)}%)`;
-    }
-
-    if (tableBody.innerHTML === '') {
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-dim);">No transactions found for this period.</td></tr>`;
-    }
-}
-
-// دالة فلترة التاريخ
-window.filterByDate = function(days, btnElement) {
-    // تغيير الكلاس الـ active للأزرار
-    const buttons = document.querySelectorAll('.filter-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    btnElement.classList.add('active');
-
-    // إعادة رسم الجدول بالفلتر الجديد
-    renderReports(days);
-
-    // محاكاة تغيير الداتا في الشارت بناءً على المدة
-    let newData = [500, 1200, 900, 2300, 1800, 3500];
-    if (days === 30) newData = [200, 400, 300, 500, 450, 600];
-    if (days === 90) newData = [300, 600, 500, 1200, 1000, 1500];
-
-    chartInstance.data.datasets[0].data = newData;
-    chartInstance.update();
-};
-
-function initReportsChart(dataPoints) {
-    const ctx = document.getElementById('cumulativePnlChart').getContext('2d');
-    
-    chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
-            datasets: [{
-                label: 'Cumulative Profit ($)',
-                data: dataPoints,
-                borderColor: '#3fb950',
-                backgroundColor: 'rgba(63, 185, 80, 0.05)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: '#3fb950'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } },
-                y: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } }
+            const simulatedPerf = Math.sin(index) * 15; 
+            
+            if (simulatedPerf > bestPerf) {
+                bestPerf = simulatedPerf;
+                bestStockSymbol = item.symbol.toUpperCase();
             }
-        }
-    });
-}
+            if (simulatedPerf < worstPerf) {
+                worstPerf = simulatedPerf;
+                worstStockSymbol = item.symbol.toUpperCase();
+            }
 
-// دالة تصدير الإكسيل
-window.exportTableToCSV = function() {
-    let csv = [];
-    const rows = document.querySelectorAll("#reportsTable tr");
-    
-    for (let i = 0; i < rows.length; i++) {
-        let row = [];
-        const cols = rows[i].querySelectorAll("td, th");
-        for (let j = 0; j < cols.length; j++) {
-            let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
-            data = data.replace(/"/g, '""');
-            row.push('"' + data + '"');
+            const date = new Date();
+            date.setDate(date.getDate() - (index * 3));
+            
+            const diffTime = Math.abs(today - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (filterDays !== 'all' && diffDays > filterDays) return; 
+
+            const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+            tableBody.innerHTML += `
+                <tr>
+                    <td style="color: var(--text-dim);">${formattedDate}</td>
+                    <td>
+                        <strong>${item.market || '🇺🇸'} ${item.symbol.toUpperCase()}</strong>
+                        <span class="company-name">${item.name || ''}</span>
+                    </td>
+                    <td><span style="background: rgba(63, 185, 80, 0.1); color: var(--accent); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight:600;">BUY</span></td>
+                    <td>${item.qty}</td>
+                    <td>$${parseFloat(item.price).toFixed(2)}</td>
+                    <td>$${currentVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                </tr>`;
+        });
+
+        // تحديث الكروت العلوية
+        document.getElementById('totalValueReport').innerText = `$${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        
+        const simulatedProfit = totalValue * 0.20;
+        const estimatedTax = simulatedProfit * 0.15;
+        const net = simulatedProfit - estimatedTax;
+
+        document.getElementById('taxValue').innerText = `$${estimatedTax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('netProfit').innerText = `$${net.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+        if (portfolio.length > 0) {
+            document.getElementById('bestStock').innerText = `${bestStockSymbol} (+${bestPerf.toFixed(2)}%)`;
+            document.getElementById('worstStock').innerText = `${worstStockSymbol} (${worstPerf.toFixed(2)}%)`;
         }
-        csv.push(row.join(","));        
     }
 
-    const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const downloadLink = document.createElement("a");
-    const date = new Date().toISOString().slice(0, 10);
-    
-    downloadLink.download = `Portfolio_Report_${date}.csv`;
-    downloadLink.href = window.URL.createObjectURL(csvFile);
-    downloadLink.style.display = "none";
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-}
-    </script>
+    // باقي الدوال (فلترة التاريخ، الشارت، إكسيل) زي ما هي تمام
+    window.filterByDate = function(days, btnElement) {
+        const buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+        renderReports(days);
+    };
+
+    function initReportsChart(dataPoints) {
+        const ctx = document.getElementById('cumulativePnlChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                datasets: [{
+                    label: 'Cumulative Profit ($)',
+                    data: dataPoints,
+                    borderColor: '#3fb950',
+                    backgroundColor: 'rgba(63, 185, 80, 0.05)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    }
+
+    window.exportTableToCSV = function() {
+        let csv = [];
+        const rows = document.querySelectorAll("#reportsTable tr");
+        for (let i = 0; i < rows.length; i++) {
+            let row = [];
+            const cols = rows[i].querySelectorAll("td, th");
+            for (let j = 0; j < cols.length; j++) {
+                row.push('"' + cols[j].innerText.trim() + '"');
+            }
+            csv.push(row.join(","));
+        }
+        const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const downloadLink = document.createElement("a");
+        downloadLink.download = `Portfolio_Report.csv`;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.click();
+    };
+</script>
 </body>
 </html>
