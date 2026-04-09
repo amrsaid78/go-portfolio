@@ -242,9 +242,8 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
     </div>
 
     <script src="analytics.js"></script>
-    <script>
-// 1. تأكد من وجود مكتبات Firebase في أعلى الملف (Script tags)
-// 2. إعدادات Firebase الخاصة بك
+  <script>
+// 1. إعدادات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
     authDomain: "stockmarketprox.firebaseapp.com",
@@ -254,64 +253,69 @@ const firebaseConfig = {
     appId: "1:797813406491:web:c063e068b793925808f1be"
 };
 
+// تشغيل Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore();
 
-// مصفوفة البيانات والمخططات
-let analyticsPortfolio = [];
-let analyticsCharts = {};
+let portfolio = []; // هتمتلئ من Firebase
+const tableBody = document.querySelector('#analyticsTable tbody');
+let charts = {};
 
-// 3. سحب البيانات فورياً عند تحميل الصفحة
 window.onload = () => {
-    db.collection("myPortfolio").onSnapshot((snapshot) => {
-        analyticsPortfolio = [];
-        snapshot.forEach((doc) => {
-            analyticsPortfolio.push({ id: doc.id, ...doc.data() });
-        });
-        
-        // لو مفيش بيانات، مفيش داعي للتحديث
-        if (analyticsPortfolio.length > 0) {
-            updateAnalyticsUI();
-        }
-    });
+    initAnalyticsCharts();
+    loadDataFromFirebase(); // الربط السحابي بدل localStorage
+    simulateLivePrices();
 };
 
-function updateAnalyticsUI() {
-    console.log("البيانات وصلت للتحليل:", analyticsPortfolio);
-    
-    // حساب توزيع المحفظة بناءً على القيمة
-    let symbols = analyticsPortfolio.map(item => item.symbol.toUpperCase());
-    let values = analyticsPortfolio.map(item => item.qty * item.price);
-    
-    // تحديث الشارت الأساسي (مثلاً شارت توزيع الأوزان)
-    if (analyticsCharts.main) {
-        analyticsCharts.main.updateSeries(values);
-        analyticsCharts.main.updateOptions({ labels: symbols });
-    } else {
-        renderMainAnalyticsChart(symbols, values);
-    }
-
-    // هنا نقدر نضيف حسابات تانية زي "أكثر قطاع مخاطرة" أو "العائد المتوقع"
+// 2. سحب البيانات من Firebase لحظياً
+function loadDataFromFirebase() {
+    db.collection("myPortfolio").onSnapshot((snapshot) => {
+        portfolio = [];
+        snapshot.forEach((doc) => {
+            portfolio.push({ id: doc.id, ...doc.data() });
+        });
+        renderAnalytics(); 
+    });
 }
 
-function renderMainAnalyticsChart(labels, series) {
-    const options = {
-        chart: { type: 'donut', height: 350 },
-        series: series,
-        labels: labels,
-        theme: { mode: 'dark' },
-        responsive: [{
-            breakpoint: 480,
-            options: { chart: { width: 200 }, legend: { position: 'bottom' } }
-        }]
-    };
-    analyticsCharts.main = new ApexCharts(document.querySelector("#analyticsChart"), options);
-    analyticsCharts.main.render();
-}
+function initAnalyticsCharts() {
+    const benchmarkCtx = document.getElementById('benchmarkChart').getContext('2d');
+    charts.benchmark = new Chart(benchmarkCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [
+                {
+                    label: 'My Portfolio',
+                    data: [100, 105, 102, 115, 120, 128], 
+                    borderColor: '#3fb950',
+                    backgroundColor: 'rgba(63, 185, 80, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'S&P 500 (Benchmark)',
+                    data: [100, 102, 101, 104, 108, 112], 
+                    borderColor: '#58a6ff',
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#8b949e' } } },
+            scales: {
+                x: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } },
+                y: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } }
+            }
+        }
+    });
 
-    // 2. شارت توزيع الأصول المستقر (Horizontal Bar Chart)
     const treemapCtx = document.getElementById('treemapChart').getContext('2d');
     charts.treemap = new Chart(treemapCtx, {
         type: 'bar',
@@ -325,7 +329,7 @@ function renderMainAnalyticsChart(labels, series) {
             }]
         },
         options: {
-            indexAxis: 'y', // قلب الشارت ليكون أفقي
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
@@ -336,7 +340,6 @@ function renderMainAnalyticsChart(labels, series) {
         }
     });
 
-    // 3. شارت توزيع الأرباح المتوقع (Bar Chart)
     const dividendCtx = document.getElementById('dividendChart').getContext('2d');
     charts.dividend = new Chart(dividendCtx, {
         type: 'bar',
@@ -384,14 +387,14 @@ function renderAnalytics(isUpdate = false) {
     let labels = [];
     let dataValues = [];
     let quarterlyDivs = [0, 0, 0, 0];
-    
     let maxWeight = 0;
     let sectorsCount = new Set();
 
     portfolio.forEach((item, index) => {
         const currentVal = item.qty * item.price;
+        // معادلة الأداء (مبنية على الترتيب لغرض العرض حالياً)
         const simulatedPerf = (Math.sin(index) * 15).toFixed(2);
-        const costBasis = currentVal / (1 + (simulatedPerf/100));
+        const costBasis = currentVal / (1 + (parseFloat(simulatedPerf)/100));
         const pnl = currentVal - costBasis;
         const weight = totalValue > 0 ? ((currentVal / totalValue) * 100).toFixed(2) : 0;
 
@@ -416,7 +419,7 @@ function renderAnalytics(isUpdate = false) {
             <tr class="${blinkClass}" style="cursor:pointer;" onclick="showPeerComparison('${item.symbol}', '${item.sector}', ${item.price})">
                 <td>
                     <strong>${item.market || '🇺🇸'} ${item.symbol.toUpperCase()}</strong>
-                    <span class="company-name">${item.name}</span>
+                    <span class="company-name">${item.name || 'Company Name'}</span>
                 </td>
                 <td>${item.qty}</td>
                 <td>$${costBasis.toFixed(2)}</td>
@@ -428,32 +431,32 @@ function renderAnalytics(isUpdate = false) {
             </tr>`;
     });
 
-    const largePosElem = document.getElementById('largePos');
-    if (largePosElem) largePosElem.innerText = `${maxWeight.toFixed(1)}%`;
+    // تحديث الإحصائيات العلوية
+    if(document.getElementById('largePos')) {
+        document.getElementById('largePos').innerText = `${maxWeight.toFixed(1)}%`;
+    }
     
     const divScoreElement = document.getElementById('divScore');
     if (divScoreElement) {
-        if (sectorsCount.size >= 5) {
-            divScoreElement.innerText = "Excellent";
-            divScoreElement.style.color = "var(--accent)";
-        } else if (sectorsCount.size >= 3) {
-            divScoreElement.innerText = "Moderate";
-            divScoreElement.style.color = "#dbab09";
-        } else {
-            divScoreElement.innerText = "Low (Risk)";
-            divScoreElement.style.color = "var(--red-alert)";
-        }
+        if (sectorsCount.size >= 5) { divScoreElement.innerText = "Excellent"; divScoreElement.style.color = "var(--accent)"; }
+        else if (sectorsCount.size >= 3) { divScoreElement.innerText = "Moderate"; divScoreElement.style.color = "#dbab09"; }
+        else { divScoreElement.innerText = "Low (Risk)"; divScoreElement.style.color = "var(--red-alert)"; }
     }
 
-    charts.treemap.data.labels = labels;
-    charts.treemap.data.datasets[0].data = dataValues;
-    charts.treemap.update();
+    // تحديث الشارتات
+    if (charts.treemap) {
+        charts.treemap.data.labels = labels;
+        charts.treemap.data.datasets[0].data = dataValues;
+        charts.treemap.update();
+    }
     
-    charts.dividend.data.datasets[0].data = quarterlyDivs;
-    charts.dividend.update();
+    if (charts.dividend) {
+        charts.dividend.data.datasets[0].data = quarterlyDivs;
+        charts.dividend.update();
+    }
 
     if (portfolio.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-dim);">No data available in portfolio.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-dim);">No data available.</td></tr>`;
     }
 
     if (isUpdate) {
@@ -467,14 +470,11 @@ function renderAnalytics(isUpdate = false) {
 window.showPeerComparison = (symbol, sector, price) => {
     const titleElem = document.getElementById('peerTitle');
     const contentElem = document.getElementById('peerContent');
-
-    if (!titleElem || !contentElem) return;
+    if(!titleElem || !contentElem) return;
 
     titleElem.innerText = `PEER COMPARISON FOR ${symbol.toUpperCase()}`;
-    
     const stockPrice = parseFloat(price);
     const sectorAvg = stockPrice * 0.95; 
-
     const status = stockPrice > sectorAvg ? 'Premium' : 'Discount';
     const color = stockPrice > sectorAvg ? 'var(--accent)' : 'var(--info)';
 
@@ -490,9 +490,8 @@ window.showPeerComparison = (symbol, sector, price) => {
         <div style="text-align: center;">
             <span style="color: var(--text-dim); font-size: 11px; font-weight: 600;">VALUATION</span>
             <div style="font-size: 18px; font-weight: 700; color: ${color};">${status}</div>
-        </div>
-    `;
+        </div>`;
 };
-    </script>
+</script>
 </body>
 </html>
