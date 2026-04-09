@@ -243,6 +243,19 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
 
     <script src="analytics.js"></script>
     <script>
+        // --- إعدادات Firebase من صورتك الأصلية ---
+const firebaseConfig = {
+    apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
+    authDomain: "stockmarketprox.firebaseapp.com",
+    projectId: "stockmarketprox",
+    storageBucket: "stockmarketprox.appspot.com",
+    messagingSenderId: "797813406491",
+    appId: "1:797813406491:web:c063e068b793925808f1be",
+    measurementId: "G-10V92EEPH5"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+        
         let portfolio = JSON.parse(localStorage.getItem('myPortfolio')) || [];
 const tableBody = document.querySelector('#analyticsTable tbody');
 let charts = {};
