@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Stock Market Pro X</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<style>
+    :root {
+    --bg-main: #0d1117;
+    --bg-card: #161b22;
+    --border: #30363d;
+    --text-main: #c9d1d9;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --positive: #3fb950;
+    --negative: #f85149;
+    --warning: #dbab09; /* لون إضافي للسعر العادل */
+    --sidebar-w: 240px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.sidebar {
+    width: var(--sidebar-w);
+    background-color: var(--bg-card);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.logo {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.logo span { color: var(--accent); }
+
+nav ul { list-style: none; }
+
+nav ul li {
+    padding: 12px 15px;
+    border-radius: 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: 0.2s ease;
+    margin-bottom: 5px;
+}
+
+nav ul li:hover, nav ul li.active {
+    background-color: rgba(88, 166, 255, 0.1);
+    color: #fff;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    overflow-y: auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+header h1 { font-size: 24px; color: #fff; margin-bottom: 5px; }
+header p { color: var(--text-dim); font-size: 14px; }
+
+.header-actions { display: flex; gap: 10px; }
+
+.add-btn {
+    background-color: var(--positive);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.add-btn:hover { opacity: 0.9; }
+
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.table-header input {
+    background-color: var(--bg-main);
+    border: 1px solid var(--border);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 200px;
+}
+
+.table-scroll {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+}
+
+th {
+    color: var(--text-dim);
+    font-weight: 600;
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 14px 15px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+tr:hover td { background-color: rgba(255, 255, 255, 0.02); }
+
+.company-name {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 3px;
+}
+
+.positive { color: var(--positive); font-weight: 600; }
+.negative { color: var(--negative); font-weight: 600; }
+
+.buy-btn {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+    border: 1px solid rgba(63, 185, 80, 0.2);
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.buy-btn:hover { background: #3fb950; color: #fff; }
+
+.remove-btn {
+    background: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+    border: 1px solid rgba(248, 81, 73, 0.2);
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-left: 5px;
+}
+.remove-btn:hover { background: #f85149; color: #fff; }
+
+/* Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    justify-content: center; align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 420px;
+    padding: 25px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-content h2 { color: #fff; margin-bottom: 5px; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; color: var(--text-dim); font-size: 13px; margin-bottom: 5px; }
+.form-group input, .form-group select {
+    width: 100%;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+.modal-actions { 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 10px; 
+    margin-top: 25px;
+    border-top: 1px solid var(--border);
+    padding-top: 15px;
+}
+.cancel-btn { 
+    background: #30363d; 
+    color: #fff; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-weight: 600;
+    transition: 0.2s;
+}
+.cancel-btn:hover { background: #444d56; }
+
+.save-btn { 
+    background: var(--positive); 
+    color: #fff; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-weight: 600; 
+    transition: 0.2s;
+}
+.save-btn:hover { opacity: 0.9; }
+
+/* ستايل شارات التقييم المالي الجديد */
+.valuation-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.val-undervalued { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
+.val-fair { background: rgba(219, 171, 9, 0.15); color: #dbab09; }
+.val-overvalued { background: rgba(248, 81, 73, 0.15); color: #f85149; }
+</style>
+</head>
+<div class="container">
+    <div class="sidebar">
+        <div class="logo">Stock Market <span>Pro X</span></div>
+        <nav>
+            <ul>
+    <li onclick="window.location.href='index.html'">Dashboard</li>
+    <li onclick="window.location.href='analytics.html'">Analytics</li>
+    <li onclick="window.location.href='reports.html'">Reports</li>
+    <li onclick="window.location.href='watchlist.html'">Watchlist</li>
+    <li onclick="window.location.href='settings.html'">Settings</li>
+</ul>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <div>
+                <h1>Market Watchlist</h1>
+                <p>Monitor potential stocks with Smart Valuation (DCF, Graham, DDM)</p>
+            </div>
+            <div class="header-actions">
+                <button class="add-btn" onclick="openWatchModal()">+ Add Symbol</button>
+            </div>
+        </header>
+
+        <div class="card" style="flex: 1;">
+            <div class="table-header">
+                <span style="font-weight:700; font-size:16px;">My Watchlist</span>
+                <input type="text" id="watchSearchInput" placeholder="Search watch symbols..." oninput="filterWatchTable()">
+            </div>
+            
+            <div class="table-scroll">
+                <table id="watchlistTable">
+                    <thead>
+                        <tr>
+                            <th>Asset</th>
+                            <th>Current Price</th>
+                            <th>Day Change</th>
+                            <th>52W High</th>
+                            <th>Fair Value & Status</th> <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="watchModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2>Add to Watchlist</h2>
+        <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 20px;">
+            Fill fields to let the system calculate the Fair Value automatically.
+        </p>
+        
+        <div class="form-group">
+            <label>Symbol *</label>
+            <input type="text" id="watchSymbol" placeholder="e.g., AAPL or COPT">
+        </div>
+
+        <div class="form-group">
+            <label>Company Name (Optional)</label>
+            <input type="text" id="watchCompanyName" placeholder="e.g., Apple Inc.">
+        </div>
+
+        <div class="form-group">
+            <label>Current Price (Optional)</label>
+            <input type="number" id="watchPrice" placeholder="0.00" step="0.01">
+        </div>
+
+        <div class="form-group">
+            <label>52-Week High (Optional)</label>
+            <input type="number" id="watchHigh" placeholder="0.00" step="0.01">
+        </div>
+
+        <div class="form-group">
+            <label>Sector / Valuation Method</label>
+            <select id="watchSector">
+                <option value="growth">🚀 Tech / Growth (Uses DCF)</option>
+                <option value="dividend">💰 High Dividend (Uses DDM)</option>
+                <option value="classic">🏢 Banking / Classic (Uses Graham)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Market</label>
+            <select id="watchMarketSelect">
+                <option value="🇺🇸">🇺🇸 United States</option>
+                <option value="🇪🇬">🇪🇬 Egypt</option>
+                <option value="🇸🇦">🇸🇦 Saudi Arabia</option>
+            </select>
+        </div>
+
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeWatchModal()">Cancel</button>
+            <button class="save-btn" onclick="saveWatchItem()">Save to List</button>
+        </div>
+    </div>
+</div>
+<script>
+    let watchlist = [
+    { symbol: 'MSFT', name: 'Microsoft Corp.', price: 420.50, high52: 430.00, market: '🇺🇸', sector: 'growth' },
+    { symbol: 'TSLA', name: 'Tesla Inc.', price: 175.20, high52: 299.00, market: '🇺🇸', sector: 'growth' },
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 875.00, high52: 974.00, market: '🇺🇸', sector: 'growth' },
+    { symbol: 'COPT', name: 'Egyptians for Housing', price: 0.35, high52: 0.50, market: '🇪🇬', sector: 'classic' },
+    { symbol: '2010', name: 'SABIC', price: 78.40, high52: 95.00, market: '🇸🇦', sector: 'dividend' }
+];
+
+const tableBody = document.querySelector('#watchlistTable tbody');
+const modal = document.getElementById('watchModal');
+
+setTimeout(() => {
+    renderWatchlist();
+    simulateLivePrices();
+}, 100);
+
+// دالة محاكاة المعادلات المالية
+function calculateFairValue(price, sector) {
+    let fairValue = 0;
+    
+    // محاكاة حسابية بسيطة تحاكي الفروقات بناءً على القطاع
+    if (sector === 'growth') {
+        // الـ DCF لشركات النمو غالباً بيعطي قيمة مستقبلية أعلى
+        fairValue = price * 1.15; 
+    } else if (sector === 'dividend') {
+        // الـ DDM بيميل للثبات
+        fairValue = price * 0.95;
+    } else {
+        // معادلة Graham بتميل لإعطاء أرقام متحفظة للشركات التقليدية
+        fairValue = price * 0.85;
+    }
+    
+    // تحديد حالة السهم مقارنة بسعره الحالي
+    let status = '';
+    let badgeClass = '';
+    const diffPercent = ((price - fairValue) / fairValue) * 100;
+    
+    if (diffPercent < -5) {
+        status = 'Under-valued (Buy)';
+        badgeClass = 'val-undervalued';
+    } else if (diffPercent > 5) {
+        status = 'Over-valued (Sell)';
+        badgeClass = 'val-overvalued';
+    } else {
+        status = 'Fair Value';
+        badgeClass = 'val-fair';
+    }
+    
+    return {
+        fv: fairValue.toFixed(2),
+        status: status,
+        badgeClass: badgeClass
+    };
+}
+
+function renderWatchlist() {
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+
+    watchlist.forEach((item, index) => {
+        const dayChangePercent = (Math.sin(index + item.price) * 3).toFixed(2);
+        
+        // حساب القيمة العادلة لكل سهم حسب قطاعه
+        const valuation = calculateFairValue(item.price, item.sector);
+        
+        tableBody.innerHTML += `
+            <tr data-symbol="${item.symbol.toUpperCase()}">
+                <td>
+                    <strong>${item.market} ${item.symbol.toUpperCase()}</strong>
+                    <span class="company-name">${item.name}</span>
+                </td>
+                <td id="price-${item.symbol}">$${parseFloat(item.price).toFixed(2)}</td>
+                <td class="${dayChangePercent >= 0 ? 'positive' : 'negative'}">
+                    ${dayChangePercent >= 0 ? '+' : ''}${dayChangePercent}%
+                </td>
+                <td>$${item.high52.toFixed(2)}</td>
+                
+                <td>
+                    <div style="font-weight:bold; margin-bottom:4px;">$${valuation.fv}</div>
+                    <span class="valuation-badge ${valuation.badgeClass}">${valuation.status}</span>
+                </td>
+                
+                <td>
+                    <button class="buy-btn" onclick="buyAsset('${item.symbol}')">Buy</button>
+                    <button class="remove-btn" onclick="removeFromWatch(${index})">Remove</button>
+                </td>
+            </tr>`;
+    });
+
+    if (watchlist.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-dim);">Your watchlist is empty.</td></tr>`;
+    }
+}
+
+function simulateLivePrices() {
+    setInterval(() => {
+        if (watchlist.length === 0) return;
+        
+        watchlist.forEach(item => {
+            const changePercent = (Math.random() - 0.5) * 0.005;
+            const oldPrice = item.price;
+            item.price = item.price * (1 + changePercent);
+            
+            const priceCell = document.getElementById(`price-${item.symbol}`);
+            if (priceCell) {
+                priceCell.innerText = `$${item.price.toFixed(2)}`;
+                
+                if (item.price > oldPrice) {
+                    priceCell.style.color = '#3fb950';
+                } else {
+                    priceCell.style.color = '#f85149';
+                }
+                
+                setTimeout(() => {
+                    priceCell.style.color = 'var(--text-main)';
+                }, 1000);
+            }
+        });
+        
+        // إعادة الرندرة عشان تتحدث شارة القيمة العادلة مع تغير السعر
+        renderWatchlist();
+    }, 5000); // خليناها 5 ثواني عشان ميبقاش الـ refresh سريع أوي
+}
+
+function filterWatchTable() {
+    const searchVal = document.getElementById('watchSearchInput').value.toLowerCase();
+    const rows = tableBody.getElementsByTagName('tr');
+    for (let row of rows) {
+        const symbol = row.getAttribute('data-symbol') || '';
+        row.style.display = (searchVal === '' || symbol.toLowerCase().includes(searchVal)) ? '' : 'none';
+    }
+}
+
+function removeFromWatch(index) {
+    watchlist.splice(index, 1);
+    renderWatchlist();
+}
+
+function openWatchModal() {
+    modal.style.display = 'flex';
+}
+
+function closeWatchModal() {
+    modal.style.display = 'none';
+    clearModalInputs();
+}
+
+function clearModalInputs() {
+    document.getElementById('watchSymbol').value = '';
+    document.getElementById('watchCompanyName').value = '';
+    document.getElementById('watchPrice').value = '';
+    document.getElementById('watchHigh').value = '';
+}
+
+function saveWatchItem() {
+    const symbol = document.getElementById('watchSymbol').value.toUpperCase();
+
+    if (!symbol) {
+        alert("Please enter at least the stock symbol!");
+        return;
+    }
+
+    const inputName = document.getElementById('watchCompanyName').value;
+    const inputPrice = parseFloat(document.getElementById('watchPrice').value);
+    const inputHigh = parseFloat(document.getElementById('watchHigh').value);
+    const sector = document.getElementById('watchSector').value;
+    const market = document.getElementById('watchMarketSelect').value;
+
+    let newItem = {
+        symbol: symbol,
+        name: inputName ? inputName : 'Auto Fetched Asset',
+        price: !isNaN(inputPrice) ? inputPrice : 100.00,
+        high52: !isNaN(inputHigh) ? inputHigh : 120.00,
+        market: market,
+        sector: sector // حفظ القطاع عشان يشغل المعادلة الصح
+    };
+
+    watchlist.push(newItem);
+    renderWatchlist();
+    closeWatchModal();
+}
+
+function buyAsset(symbol) {
+    alert(`This will open the Buy Modal for ${symbol} once we link the pages!`);
+}
+</script>
+</body>
+</html>
