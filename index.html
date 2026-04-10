@@ -37,7 +37,6 @@ body {
     font-family: 'Inter', sans-serif; 
     background-color: var(--bg-dark); 
     color: var(--text-main); 
-    /* التعديل: جعل الطول يتحدد حسب المحتوى لفتح السكرول */
     min-height: 100vh;
     overflow-y: auto; 
     direction: ltr; 
@@ -45,20 +44,17 @@ body {
 
 .container { display: flex; min-height: 100vh; width: 100vw; }
 
-/* تم تعديل الـ Sidebar هنا لضمان الثبات التام */
 .sidebar { 
     width: 240px; 
     background: var(--sidebar-bg); 
     padding: 25px 15px; 
     border-right: 1px solid var(--border); 
     flex-shrink: 0; 
-    /* التعديل: جعل السايدبار يثبت في مكانه أثناء النزول */
     position: sticky;
     top: 0;
     height: 100vh;
 }
 
-/* تم تعديل اللوجو لمنع الهزة */
 .logo { 
     font-size: 20px; 
     font-weight: 800; 
@@ -78,7 +74,6 @@ nav li.active, nav li:hover { background: #1f2937; color: #fff; }
     display: flex; 
     flex-direction: column; 
     gap: 15px; 
-    /* التعديل: إزالة الطول الثابت لفتح المحتوى */
     height: auto;
     overflow: visible; 
 }
@@ -91,7 +86,6 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
 .add-btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 .export-btn { background: transparent; color: var(--text-dim); border: 1px solid var(--border); padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
-/* شريط المؤشرات الاقتصادية */
 .macro-bar {
     display: flex;
     gap: 15px;
@@ -120,11 +114,10 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
 .macro-up { background-color: rgba(63, 185, 80, 0.15) !important; }
 .macro-down { background-color: rgba(248, 81, 73, 0.15) !important; }
 
-/* Grid Layout */
+/* Dashboard Grid */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr; 
-    /* التعديل: جعل الشبكة تتمدد مع المحتوى بدلاً من الالتزام بارتفاع شاشة واحدة */
     grid-template-rows: auto; 
     gap: 15px;
     flex: none;
@@ -142,54 +135,42 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
     overflow: hidden; 
 }
 
-/* تعديل الـ Label عشان ميركبش فوق الكلام */
+/* (حل مشكلة الكلام المتداخل) */
 .card-label { 
     font-size: 11px; 
     color: var(--text-dim); 
     font-weight: 600; 
-    letter-spacing: 0.5px;
+    z-index: 5; 
+    letter-spacing: 0.5px; 
     text-transform: uppercase;
-    margin-bottom: 15px; /* مسافة تحت العنوان الصغير */
+    margin-bottom: 12px;
 }
 
-/* تعديل الـ Card الأساسي لضبط المحاذاة */
-.card { 
-    background: var(--card-bg); 
-    border: 1px solid var(--border); 
-    border-radius: 12px; 
-    padding: 20px;
+.grid-1 { grid-column: 1 / 2; grid-row: 1 / 2; }
+.grid-2 { grid-column: 2 / 3; grid-row: 1 / 3; }
+.grid-3 { grid-column: 3 / 4; grid-row: 1 / 3; }
+
+/* (تحسين شكل كروت الأداء) */
+.grid-best { grid-column: 1 / 2; grid-row: 2 / 3; border-left: 4px solid var(--accent); background: linear-gradient(135deg, #161b22 0%, rgba(63, 185, 80, 0.05) 100%); }
+.grid-worst { grid-column: 1 / 2; grid-row: 3 / 4; border-left: 4px solid var(--red-alert); background: linear-gradient(135deg, #161b22 0%, rgba(248, 81, 73, 0.05) 100%); }
+.grid-active { grid-column: 1 / 2; grid-row: 4 / 5; border-left: 4px solid var(--info); background: linear-gradient(135deg, #161b22 0%, rgba(88, 166, 255, 0.05) 100%); }
+
+.grid-5 { grid-column: 2 / 4; grid-row: 3 / 5; min-height: 250px; }
+.grid-4 { grid-column: 1 / 4; grid-row: 5 / 6; min-height: 400px; }
+
+.canvas-wrapper { 
+    flex: 1; 
+    width: 100%; 
+    height: 100%; 
+    margin-top: 25px; 
+    position: relative; 
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start; /* ترتيب العناصر من الأعلى للأسفل */
-    overflow: hidden; 
+    justify-content: center;
+    align-items: center;
 }
-
-/* تحسين شكل كروت الأداء (Top/Worst) */
-.grid-best, .grid-worst {
-    min-height: 120px; /* ضمان مساحة كافية */
-    transition: transform 0.2s;
-}
-
-.grid-best:hover, .grid-worst:hover {
-    transform: translateY(-3px);
-}
-
-/* إضافة لمسة جمالية (إضاءة خفيفة خلف الكروت) */
-.grid-best {
-    border-left: 4px solid var(--accent);
-    background: linear-gradient(135deg, #161b22 0%, rgba(63, 185, 80, 0.05) 100%);
-}
-
-.grid-worst {
-    border-left: 4px solid var(--red-alert);
-    background: linear-gradient(135deg, #161b22 0%, rgba(248, 81, 73, 0.05) 100%);
-}
-
-.kpi-content h3 { 
-    font-size: 24px; /* كبرنا الخط شوية */
-    margin: 5px 0; 
-    color: #fff; 
-    font-weight: 800; 
+.canvas-wrapper canvas { 
+    max-width: 100% !important; 
+    max-height: 220px !important; 
 }
 
 .net-worth-card { justify-content: space-between; align-items: center; padding-top: 40px; }
@@ -197,7 +178,7 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
 .net-worth-content h2 { font-size: 32px; margin: 0; font-weight: 800; color: #fff; }
 
 .kpi-content { margin-top: auto; text-align: left; }
-.kpi-content h3 { font-size: 20px; margin: 0 0 5px 0; color: #fff; font-weight: 700; }
+.kpi-content h3 { font-size: 22px; margin: 0 0 5px 0; color: #fff; font-weight: 700; }
 
 .pnl-text { font-size: 13px; font-weight: 600; display: block; margin-top: 5px; }
 .positive { color: var(--accent); }
@@ -206,13 +187,11 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
 
 .sparkline-wrapper { width: 100%; height: 60px; margin-top: auto; position: relative; }
 
-/* Table Section */
 .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0;}
 #searchInput { background: var(--bg-dark); border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; width: 200px; font-size: 13px; }
 
 .table-scroll { 
     width: 100%;
-    /* تم فتح سكرول الصفحة العام، لذا لا نحتاج سكرول داخلي هنا يعيق التفاعل */
     overflow: visible;
 } 
 
@@ -225,7 +204,6 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
 .edit-btn { color: #58a6ff; }
 .delete-btn { color: var(--red-alert); }
 
-/* إشارات القرار */
 .signal-badge {
     padding: 4px 8px;
     border-radius: 4px;
@@ -238,7 +216,6 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
 .sig-hold { background: rgba(219, 171, 9, 0.15); color: var(--warning); }
 .sig-reduce { background: rgba(248, 81, 73, 0.15); color: var(--red-alert); }
 
-/* Modal */
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 9999; }
 .modal-content { width: 360px; background: var(--card-bg); border: 1px solid var(--border); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
 .modal-content h3 { margin: 0 0 10px 0; color: #fff; }
@@ -308,23 +285,31 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
                     </div>
                 </div>
 
-<!-- Top Performer Card -->
-<div class="card grid-best">
-    <div class="card-label">Top Performer</div>
-    <div class="kpi-content">
-        <h3 id="bestAsset">---</h3>
-        <span id="bestPct" class="pnl-text positive">▲ +0.00%</span>
-    </div>
-</div>
+                <!-- (تم فصل الـ Labels عن العناوين لمنع التداخل) -->
+                <div class="card grid-best">
+                    <div class="card-label">TOP PERFORMER</div>
+                    <div class="kpi-content">
+                        <h3 id="bestAsset">---</h3>
+                        <span id="bestPct" class="pnl-text positive">▲ +0.00%</span>
+                    </div>
+                </div>
 
-<!-- Worst Performer Card -->
-<div class="card grid-worst">
-    <div class="card-label">Worst Performer</div>
-    <div class="kpi-content">
-        <h3 id="worstAsset">---</h3>
-        <span id="worstPct" class="pnl-text negative">▼ -0.00%</span>
-    </div>
-</div>
+                <div class="card grid-worst">
+                    <div class="card-label">WORST PERFORMER</div>
+                    <div class="kpi-content">
+                        <h3 id="worstAsset">---</h3>
+                        <span id="worstPct" class="pnl-text negative">▼ -0.00%</span>
+                    </div>
+                </div>
+
+                <!-- (الكارت الثالث الجديد) -->
+                <div class="card grid-active">
+                    <div class="card-label">ACTIVE ASSETS</div>
+                    <div class="kpi-content">
+                        <h3 id="activeAssetsCount">0</h3>
+                        <span class="pnl-text positive">Total Positions</span>
+                    </div>
+                </div>
 
                 <div class="card grid-2">
                     <div class="card-label">SECTOR ALLOCATION</div>
@@ -410,7 +395,6 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
     </div>
 
 <script>
-// --- إعدادات Firebase الكاملة من كودك ---
 const firebaseConfig = {
     apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
     authDomain: "stockmarketprox.firebaseapp.com",
@@ -423,7 +407,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// مصفوفة البيانات الأساسية
 let portfolio = [];
 let editIndex = null; 
 let charts = {}; 
@@ -439,12 +422,10 @@ let macroData = {
     gold: 2150.00
 };
 
-// تشغيل عند التحميل
 window.onload = () => {
     initCharts();
     simulateMacroData();
     
-    // سحب البيانات من Firestore
     db.collection("myPortfolio").onSnapshot((snapshot) => {
         portfolio = [];
         snapshot.forEach((doc) => {
@@ -473,7 +454,6 @@ function clearInputs() {
     document.getElementById('marketSelect').value = '';
 }
 
-// --- كود الرسوم البيانية الكامل ---
 function initCharts() {
     if(charts.sector) charts.sector.destroy();
     if(charts.sparkline) charts.sparkline.destroy();
@@ -594,7 +574,6 @@ function getActionSignal(performancePct) {
     else return { text: 'Hold', class: 'sig-hold' };
 }
 
-// --- كود الـ Render بالكامل دون أي حذف ---
 function render() {
     if (!tableBody) return;
     tableBody.innerHTML = '';
@@ -664,24 +643,21 @@ function render() {
     document.getElementById('totalNetWorth').innerText = `$${totalCurrentValue.toLocaleString()}`;
     const totalPnL = document.getElementById('totalPnL');
     
-    // ابحث عن السطور دي في دالة الـ render وعدلها
-if (portfolio.length > 0) {
-    // ... الكود الموجود مسبقاً ...
+    // (تحديث عدد الأصول النشطة)
+    document.getElementById('activeAssetsCount').innerText = portfolio.length;
 
-    document.getElementById('bestAsset').innerText = bestSymbol;
-    document.getElementById('bestPct').innerText = `▲ +${bestPerformance.toFixed(2)}%`;
-    
-    document.getElementById('worstAsset').innerText = worstSymbol;
-    document.getElementById('worstPct').innerText = `▼ ${worstPerformance.toFixed(2)}%`;
-}
+    if (portfolio.length > 0) {
+        let profitValue = totalCurrentValue - totalCostBasis;
+        let profitPct = (profitValue / totalCostBasis) * 100;
+
         totalPnL.innerText = `${profitValue >= 0 ? '+' : ''}$${Math.abs(profitValue).toLocaleString()} (${profitPct.toFixed(2)}%)`;
         totalPnL.className = `pnl-text ${profitValue >= 0 ? 'positive' : 'negative'}`;
 
         document.getElementById('bestAsset').innerText = bestSymbol;
-        document.getElementById('bestPct').innerText = `+${bestPerformance.toFixed(2)}%`;
+        document.getElementById('bestPct').innerText = `▲ +${bestPerformance.toFixed(2)}%`;
         
         document.getElementById('worstAsset').innerText = worstSymbol;
-        document.getElementById('worstPct').innerText = `${worstPerformance.toFixed(2)}%` || "-0.00%";
+        document.getElementById('worstPct').innerText = `▼ ${worstPerformance.toFixed(2)}%` || "-0.00%";
     } else {
         totalPnL.innerText = "No active data";
         totalPnL.className = "pnl-text neutral";
@@ -742,31 +718,26 @@ saveBtn.onclick = async () => {
     const m = document.getElementById('marketSelect').value;
 
     if (s && q && p && sec && m) {
+        const entry = { symbol: s, name: n, qty: q, price: p, sector: sec, market: m };
         try {
             if (editIndex !== null) { 
-                // SCENARIO 1: Manually editing an existing row via the pencil icon
-                const entry = { symbol: s, name: n, qty: q, price: p, sector: sec, market: m };
                 await db.collection("myPortfolio").doc(portfolio[editIndex].id).update(entry);
             } else { 
-                // SCENARIO 2: Adding a new asset (Check if it already exists to merge)
+                // (حل مشكلة تكرار الأسهم عبر دمجها)
                 const existingAsset = portfolio.find(item => item.symbol.toUpperCase() === s);
 
                 if (existingAsset) {
-                    // CALCULATE MERGE:
                     const newTotalQty = existingAsset.qty + q;
-                    // Formula: ((Old Qty * Old Price) + (New Qty * New Price)) / Total Qty
                     const newAvgPrice = ((existingAsset.qty * existingAsset.price) + (q * p)) / newTotalQty;
 
                     await db.collection("myPortfolio").doc(existingAsset.id).update({
                         qty: newTotalQty,
                         price: newAvgPrice,
-                        name: n, // Update name/sector just in case they were different
+                        name: n, 
                         sector: sec,
                         market: m
                     });
                 } else {
-                    // SCENARIO 3: Brand new symbol, add normally
-                    const entry = { symbol: s, name: n, qty: q, price: p, sector: sec, market: m };
                     await db.collection("myPortfolio").add(entry);
                 }
             }
