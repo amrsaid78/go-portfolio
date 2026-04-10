@@ -26,8 +26,6 @@
     --border: #30363d;
     --text-main: #e6edf3;
     --text-dim: #8b949e;
-    --warning: #dbab09;
-    --info: #58a6ff;
 }
 
 * { box-sizing: border-box; }
@@ -38,7 +36,7 @@ body {
     background-color: var(--bg-dark); 
     color: var(--text-main); 
     min-height: 100vh;
-    overflow-y: auto; /* يسمح بنزول الصفحة بالكامل */
+    overflow-y: auto; /* يسمح للصفحة كلها بالنزول */
     direction: ltr; 
 }
 
@@ -50,7 +48,7 @@ body {
     padding: 25px 15px; 
     border-right: 1px solid var(--border); 
     flex-shrink: 0; 
-    position: sticky; /* يثبت السايد بار أثناء النزول */
+    position: sticky;
     top: 0;
     height: 100vh;
 }
@@ -61,14 +59,15 @@ body {
     display: flex; 
     flex-direction: column; 
     gap: 15px; 
-    min-height: 100vh;
 }
 
-/* --- ضبط شبكة الداشبورد (Dashboard Grid) --- */
+/* --- العودة لتصميم الصورة رقم 3 --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 320px 1fr 1fr; /* عمود ثابت للكروت الجانبية وعمودين مرنين للشارتات */
-    grid-template-rows: auto auto auto; /* جعل الصفوف تتمدد حسب المحتوى */
+    /* تحديد عرض العمود الأول ليكون متناسق مع الكروت الجانبية */
+    grid-template-columns: 350px 1fr 1fr; 
+    /* جعل الصفوف تأخذ مساحة المحتوى فقط */
+    grid-template-rows: auto auto auto;
     gap: 15px;
     padding-bottom: 40px;
 }
@@ -81,52 +80,46 @@ body {
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 220px; /* ضمان طول مناسب للكروت */
+    min-height: 180px; /* لضمان عدم صغر الكروت زيادة */
 }
 
-/* توزيع العناصر داخل الشبكة بدقة لمنع اللخبطة */
-.grid-1 { grid-column: 1 / 2; grid-row: 1 / 2; } /* Net Worth */
-.grid-2 { grid-column: 2 / 3; grid-row: 1 / 2; } /* Top Chart Left */
-.grid-3 { grid-column: 3 / 4; grid-row: 1 / 2; } /* Top Chart Right */
+/* ضبط أماكن الكروت بدقة كما في الصورة 3 */
+.grid-1 { grid-column: 1 / 2; grid-row: 1 / 2; } /* Total Net Worth */
+.grid-2 { grid-column: 2 / 3; grid-row: 1 / 2; } /* Sector Allocation */
+.grid-3 { grid-column: 3 / 4; grid-row: 1 / 2; } /* Asset Distribution */
 
-.grid-best { grid-column: 1 / 2; grid-row: 2 / 3; min-height: 120px !important; }
-.grid-worst { grid-column: 1 / 2; grid-row: 3 / 4; min-height: 120px !important; }
+.grid-best { grid-column: 1 / 2; grid-row: 2 / 3; min-height: 130px !important; }
+.grid-worst { grid-column: 1 / 2; grid-row: 3 / 4; min-height: 130px !important; }
 
-.grid-5 { grid-column: 2 / 4; grid-row: 2 / 4; } /* Main Analytics Chart */
-.grid-4 { grid-column: 1 / 4; grid-row: 4 / 5; margin-top: 10px; } /* الجدول في الأسفل بالكامل */
+/* شارت الـ Main Portfolio */
+.grid-5 { grid-column: 2 / 4; grid-row: 2 / 4; } 
 
-.card-label { font-size: 11px; color: var(--text-dim); font-weight: 600; position: absolute; top: 15px; left: 20px; z-index: 5; letter-spacing: 0.5px; text-transform: uppercase; }
+/* جدول الـ Holdings في الأسفل تماماً */
+.grid-4 { grid-column: 1 / 4; grid-row: 4 / 5; margin-top: 10px; }
 
-.canvas-wrapper { 
-    flex: 1; 
-    width: 100%;
-    margin-top: 25px; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+.card-label { font-size: 11px; color: var(--text-dim); font-weight: 600; position: absolute; top: 15px; left: 20px; text-transform: uppercase; }
 
-/* --- تحرير الجدول --- */
+.canvas-wrapper { flex: 1; width: 100%; margin-top: 25px; display: flex; justify-content: center; align-items: center; }
+
+/* إلغاء الـ Scroll الداخلي للجدول ليفرد مع الصفحة */
 .table-scroll { 
     overflow: visible !important; 
     max-height: none !important; 
 } 
 
-table { width: 100%; border-collapse: collapse; text-align: left; }
-th { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; color: var(--text-dim); font-size: 11px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; }
 
-/* الماكرو بار */
+/* الماكرو بار العلوي */
 .macro-bar {
     display: flex;
-    gap: 15px;
-    background: #161b22;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 5px;
     justify-content: space-around;
-    flex-shrink: 0;
+    background: var(--card-bg);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 5px;
 }
 </style>
 <body>
