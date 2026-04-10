@@ -3,240 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Market Pro X</title>
+    <title>Stock Market Pro X - Dashboard</title>
     
-    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --bg-dark: #0d1117;
+        --sidebar-bg: #161b22;
+        --card-bg: #161b22;
+        --accent: #3fb950;
+        --red-alert: #f85149;
+        --border: #30363d;
+        --text-main: #e6edf3;
+        --text-dim: #8b949e;
+        --warning: #dbab09;
+        --info: #58a6ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body { 
+        margin: 0; 
+        font-family: 'Inter', sans-serif; 
+        background-color: var(--bg-dark); 
+        color: var(--text-main); 
+        min-height: 100vh;
+        overflow-y: auto; /* يسمح بنزول الصفحة بالكامل */
+        direction: ltr; 
+    }
+
+    .container { display: flex; min-height: 100vh; width: 100vw; }
+
+    .sidebar { 
+        width: 240px; 
+        background: var(--sidebar-bg); 
+        padding: 25px 15px; 
+        border-right: 1px solid var(--border); 
+        flex-shrink: 0; 
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+    }
+
+    .logo { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 35px; white-space: nowrap; }
+    .logo span { color: var(--accent); }
+    nav ul { list-style: none; padding: 0; }
+    nav li { padding: 12px 15px; color: var(--text-dim); cursor: pointer; border-radius: 8px; margin-bottom: 5px; font-size: 14px; }
+    nav li.active, nav li:hover { background: #1f2937; color: #fff; }
+
+    .main-content { 
+        flex: 1; 
+        padding: 25px; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 15px; 
+    }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    .header-actions { display: flex; gap: 10px; }
+
+    .add-btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .add-btn:hover { opacity: 0.8; }
+    .export-btn { background: transparent; color: var(--text-dim); border: 1px solid var(--border); padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+
+    .macro-bar {
+        display: flex;
+        justify-content: space-around;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .macro-item { display: flex; flex-direction: column; align-items: center; transition: background 0.3s; padding: 5px 15px; border-radius: 6px; }
+    .macro-label { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .macro-value { font-weight: 700; color: #fff; margin-top: 2px; }
+    .macro-up { background-color: rgba(63, 185, 80, 0.2); }
+    .macro-down { background-color: rgba(248, 81, 73, 0.2); }
+
+    /* --- ضبط نظام الـ Grid ليكون مطابق للصورة 3 --- */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 350px 1fr 1fr; 
+        grid-template-rows: auto auto auto;
+        gap: 15px;
+        padding-bottom: 30px;
+    }
+
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; display: flex; flex-direction: column; min-height: 180px; }
+    .card-label { font-size: 11px; color: var(--text-dim); font-weight: 600; position: absolute; top: 15px; left: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .grid-1 { grid-column: 1 / 2; grid-row: 1 / 2; }
+    .grid-2 { grid-column: 2 / 3; grid-row: 1 / 2; }
+    .grid-3 { grid-column: 3 / 4; grid-row: 1 / 2; }
+
+    .grid-best { grid-column: 1 / 2; grid-row: 2 / 3; min-height: 130px !important; }
+    .grid-worst { grid-column: 1 / 2; grid-row: 3 / 4; min-height: 130px !important; }
+
+    .grid-5 { grid-column: 2 / 4; grid-row: 2 / 4; min-height: 300px; }
+    .grid-4 { grid-column: 1 / 4; grid-row: 4 / 5; margin-top: 10px; min-height: auto; }
+
+    .canvas-wrapper { flex: 1; width: 100%; margin-top: 25px; display: flex; justify-content: center; align-items: center; }
+    
+    .net-worth-content { text-align: center; margin-top: 30px; }
+    .net-worth-content h2 { font-size: 32px; margin: 0; font-weight: 800; color: #fff; }
+    .pnl-text { font-size: 13px; font-weight: 600; display: block; margin-top: 5px; }
+    .positive { color: var(--accent); }
+    .negative { color: var(--red-alert); }
+
+    .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    #searchInput { background: var(--bg-dark); border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; width: 220px; }
+
+    .table-scroll { overflow: visible !important; } /* يسمح للجدول بالتمدد مع الصفحة */
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; color: var(--text-dim); font-size: 11px; padding: 12px 0; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+    td { padding: 15px 0; border-bottom: 1px solid #21262d; font-size: 14px; }
+
+    .signal-badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .sig-accumulate { background: rgba(88, 166, 255, 0.15); color: var(--info); }
+    .sig-hold { background: rgba(219, 171, 9, 0.15); color: var(--warning); }
+    .sig-reduce { background: rgba(248, 81, 73, 0.15); color: var(--red-alert); }
+
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 9999; }
+    .modal-content { width: 380px; background: var(--card-bg); border: 1px solid var(--border); padding: 30px; border-radius: 12px; display: flex; flex-direction: column; gap: 12px; }
+    .modal-content input, .modal-content select { width: 100%; padding: 12px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
+    .save-btn { flex: 1; background: var(--accent); border: none; color: #fff; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    .cancel-btn { flex: 1; background: var(--border); border: none; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; }
+    </style>
 </head>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-:root {
-    --bg-dark: #0d1117;
-    --sidebar-bg: #161b22;
-    --card-bg: #161b22;
-    --accent: #3fb950;
-    --red-alert: #f85149;
-    --border: #30363d;
-    --text-main: #e6edf3;
-    --text-dim: #8b949e;
-    --warning: #dbab09;
-    --info: #58a6ff;
-}
-
-* { box-sizing: border-box; }
-
-body { 
-    margin: 0; 
-    font-family: 'Inter', sans-serif; 
-    background-color: var(--bg-dark); 
-    color: var(--text-main); 
-    height: 100vh;
-    overflow-y: auto;          /* التعديل الرئيسي */
-    direction: ltr; 
-}
-
-.container { display: flex; min-height: 100vh; width: 100vw; }
-
-.sidebar { 
-    width: 240px; 
-    background: var(--sidebar-bg); 
-    padding: 25px 15px; 
-    border-right: 1px solid var(--border); 
-    flex-shrink: 0; 
-    height: 100vh;
-    position: sticky;
-    top: 0;
-}
-
-.logo { 
-    font-size: 20px; 
-    font-weight: 800; 
-    color: #fff; 
-    margin-bottom: 35px; 
-    white-space: nowrap;
-}
-.logo span { color: var(--accent); }
-
-nav ul { list-style: none; padding: 0; }
-nav li { padding: 12px 15px; color: var(--text-dim); cursor: pointer; border-radius: 8px; margin-bottom: 5px; font-size: 14px; }
-nav li.active, nav li:hover { background: #1f2937; color: #fff; }
-
-.main-content { 
-    flex: 1; 
-    padding: 25px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px;
-    min-height: 100vh;
-}
-
-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-header h1 { margin: 0; font-size: 24px; font-weight: 700; }
-header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
-.header-actions { display: flex; gap: 10px; }
-
-.add-btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-.export-btn { background: transparent; color: var(--text-dim); border: 1px solid var(--border); padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-
-.macro-bar {
-    display: flex;
-    gap: 15px;
-    background: #161b22;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 5px;
-    justify-content: space-around;
-    flex-shrink: 0;
-}
-
-.macro-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 13px;
-    transition: background-color 0.3s ease;
-    padding: 4px 10px;
-    border-radius: 6px;
-}
-
-.macro-label { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.macro-value { font-weight: 700; color: #fff; margin-top: 2px; }
-
-.macro-up { background-color: rgba(63, 185, 80, 0.15) !important; }
-.macro-down { background-color: rgba(248, 81, 73, 0.15) !important; }
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr; 
-    grid-template-rows: 200px 110px auto auto; 
-    gap: 15px;
-    flex: 1;
-    padding-bottom: 40px;
-}
-
-.card { 
-    background: var(--card-bg); 
-    border: 1px solid var(--border); 
-    border-radius: 12px; 
-    padding: 20px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; 
-}
-
-.card-label { font-size: 11px; color: var(--text-dim); font-weight: 600; position: absolute; top: 15px; left: 20px; z-index: 5; letter-spacing: 0.5px; }
-
-.grid-1 { grid-column: 1 / 2; grid-row: 1 / 2; }
-.grid-2 { grid-column: 2 / 3; grid-row: 1 / 3; }
-.grid-3 { grid-column: 3 / 4; grid-row: 1 / 3; }
-.grid-best { grid-column: 1 / 2; grid-row: 2 / 3; }
-.grid-worst { grid-column: 1 / 2; grid-row: 3 / 4; }
-.grid-5 { grid-column: 2 / 4; grid-row: 3 / 4; min-height: 250px; }
-.grid-4 { grid-column: 1 / 4; grid-row: 4 / 5; min-height: 280px; }
-
-.canvas-wrapper { 
-    flex: 1; 
-    width: 100%; 
-    height: 100%; 
-    margin-top: 25px; 
-    position: relative; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.canvas-wrapper canvas { 
-    max-width: 100% !important; 
-    max-height: 220px !important; 
-}
-
-.net-worth-card { justify-content: space-between; align-items: center; padding-top: 40px; }
-.net-worth-content { text-align: center; margin-top: 20px; }
-.net-worth-content h2 { font-size: 32px; margin: 0; font-weight: 800; color: #fff; }
-
-.kpi-content { margin-top: auto; text-align: left; }
-.kpi-content h3 { font-size: 20px; margin: 0 0 5px 0; color: #fff; font-weight: 700; }
-
-.pnl-text { font-size: 13px; font-weight: 600; display: block; margin-top: 5px; }
-.positive { color: var(--accent); }
-.negative { color: var(--red-alert); }
-.neutral { color: var(--text-dim); }
-
-.sparkline-wrapper { width: 100%; height: 60px; margin-top: auto; position: relative; }
-
-/* التعديل الرئيسي للجدول */
-.table-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-bottom: 15px; 
-    flex-shrink: 0;
-}
-
-.table-scroll { 
-    flex: 1; 
-    overflow-y: visible;     /* مهم */
-    max-height: none;        /* مهم */
-    padding-right: 0;
-} 
-
-table { width: 100%; border-collapse: collapse; text-align: left; }
-th { 
-    color: var(--text-dim); 
-    font-size: 11px; 
-    font-weight: 600; 
-    text-transform: uppercase; 
-    padding-bottom: 12px; 
-    border-bottom: 1px solid var(--border); 
-    position: sticky; 
-    top: 0; 
-    background: var(--card-bg); 
-    z-index: 10;
-}
-td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertical-align: middle;}
-.company-name { font-size: 11px; color: var(--text-dim); display: block; }
-
-.edit-btn, .delete-btn { 
-    background: transparent; 
-    border: 1px solid var(--border); 
-    padding: 5px; 
-    border-radius: 4px; 
-    cursor: pointer; 
-    margin-right: 3px; 
-}
-.edit-btn { color: #58a6ff; }
-.delete-btn { color: var(--red-alert); }
-
-.signal-badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    display: inline-block;
-}
-.sig-accumulate { background: rgba(88, 166, 255, 0.15); color: var(--info); }
-.sig-hold { background: rgba(219, 171, 9, 0.15); color: var(--warning); }
-.sig-reduce { background: rgba(248, 81, 73, 0.15); color: var(--red-alert); }
-
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 9999; }
-.modal-content { width: 360px; background: var(--card-bg); border: 1px solid var(--border); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
-.modal-content h3 { margin: 0 0 10px 0; color: #fff; }
-.modal-content input, .modal-content select { width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; }
-.modal-actions { display: flex; gap: 10px; margin-top: 10px; }
-.save-btn { flex: 1; background: var(--accent); border: none; color: #fff; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-.cancel-btn { flex: 1; background: var(--border); border: none; color: #fff; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-</style>
-
 <body>
-
     <div class="container">
         <div class="sidebar">
             <div class="logo">Stock Market <span>Pro X</span></div>
@@ -255,7 +160,7 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
             <header>
                 <div>
                     <h1>Portfolio Overview</h1>
-                    <p>Track your assets and performance with Smart Signals</p>
+                    <p style="color: var(--text-dim); margin: 5px 0 0; font-size: 13px;">Track your assets with Smart Signals</p>
                 </div>
                 <div class="header-actions">
                     <button class="export-btn" onclick="exportToCSV()">Export CSV</button>
@@ -264,87 +169,66 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
             </header>
 
             <div class="macro-bar">
-                <div class="macro-item" id="fedRateItem">
-                    <span class="macro-label">Federal Funds Rate</span>
-                    <span class="macro-value" id="fedRateValue">5.25%</span>
-                </div>
-                <div class="macro-item" id="treasury10yItem">
-                    <span class="macro-label">US 10Y Yield</span>
-                    <span class="macro-value" id="treasury10yValue">4.15%</span>
-                </div>
-                <div class="macro-item" id="inflationItem">
-                    <span class="macro-label">Inflation Rate (CPI)</span>
-                    <span class="macro-value" id="inflationValue">3.10%</span>
-                </div>
-                <div class="macro-item" id="goldItem">
-                    <span class="macro-label">Gold (XAU)</span>
-                    <span class="macro-value" id="goldValue">$2,150.00</span>
-                </div>
+                <div class="macro-item" id="fedRateItem"><span class="macro-label">FED RATE</span><span class="macro-value" id="fedRateValue">5.25%</span></div>
+                <div class="macro-item" id="treasury10yItem"><span class="macro-label">US 10Y</span><span class="macro-value" id="treasury10yValue">4.15%</span></div>
+                <div class="macro-item" id="inflationItem"><span class="macro-label">INFLATION</span><span class="macro-value" id="inflationValue">3.10%</span></div>
+                <div class="macro-item" id="goldItem"><span class="macro-label">GOLD</span><span class="macro-value" id="goldValue">$2,150</span></div>
             </div>
 
             <div class="dashboard-grid">
-                
-                <div class="card grid-1 net-worth-card">
+                <div class="card grid-1">
                     <div class="card-label">TOTAL NET WORTH</div>
                     <div class="net-worth-content">
                         <h2 id="totalNetWorth">$0</h2>
-                        <span id="totalPnL" class="pnl-text neutral">No active data</span>
-                    </div>
-                    <div class="sparkline-wrapper">
-                        <canvas id="miniSparkline"></canvas>
-                    </div>
-                </div>
-
-                <div class="card grid-best">
-                    <div class="card-label">TOP PERFORMER</div>
-                    <div class="kpi-content">
-                        <h3 id="bestAsset">---</h3>
-                        <span id="bestPct" class="pnl-text positive">+0.00%</span>
-                    </div>
-                </div>
-
-                <div class="card grid-worst">
-                    <div class="card-label">WORST PERFORMER</div>
-                    <div class="kpi-content">
-                        <h3 id="worstAsset">---</h3>
-                        <span id="worstPct" class="pnl-text negative">-0.00%</span>
+                        <span id="totalPnL" class="pnl-text positive">---</span>
                     </div>
                 </div>
 
                 <div class="card grid-2">
                     <div class="card-label">SECTOR ALLOCATION</div>
-                    <div class="canvas-wrapper">
-                        <canvas id="sectorChart"></canvas>
-                    </div>
+                    <div class="canvas-wrapper"><canvas id="sectorChart"></canvas></div>
                 </div>
 
                 <div class="card grid-3">
                     <div class="card-label">ASSET DISTRIBUTION</div>
-                    <div class="canvas-wrapper">
-                        <canvas id="distChart"></canvas>
+                    <div class="canvas-wrapper"><canvas id="distChart"></canvas></div>
+                </div>
+
+                <div class="card grid-best">
+                    <div class="card-label">TOP PERFORMER</div>
+                    <div style="margin-top: 35px;">
+                        <h3 id="bestAsset" style="margin:0; font-size:20px;">---</h3>
+                        <span id="bestPct" class="positive" style="font-weight:700;">+0.00%</span>
+                    </div>
+                </div>
+
+                <div class="card grid-worst">
+                    <div class="card-label">WORST PERFORMER</div>
+                    <div style="margin-top: 35px;">
+                        <h3 id="worstAsset" style="margin:0; font-size:20px;">---</h3>
+                        <span id="worstPct" class="negative" style="font-weight:700;">-0.00%</span>
                     </div>
                 </div>
 
                 <div class="card grid-5">
-                    <div class="card-label" id="candleLabel">Main Portfolio (Select Asset)</div>
+                    <div class="card-label" id="candleLabel">Main Portfolio Chart</div>
                     <div id="candleChart" style="height:100%; width:100%; margin-top:20px;"></div>
                 </div>
 
-                <!-- قسم Holdings بعد التعديل -->
                 <div class="card grid-4">
                     <div class="table-header">
-                        <span style="font-weight:700; font-size:16px;">Holdings</span>
-                        <input type="text" id="searchInput" placeholder="Search symbol..." oninput="filterTable()">
+                        <span style="font-weight:800; font-size:18px;">Holdings</span>
+                        <input type="text" id="searchInput" placeholder="Search asset..." oninput="filterTable()">
                     </div>
                     <div class="table-scroll">
                         <table id="mainTable">
                             <thead>
                                 <tr>
                                     <th>Asset</th>
-                                    <th>Market Price</th>
-                                    <th>Quantity</th>
-                                    <th>Total Value</th>
-                                    <th>Action Signal</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Value</th>
+                                    <th>Signal</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -352,41 +236,29 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
                         </table>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
     <div class="modal" id="addModal">
         <div class="modal-content">
-            <h3 id="modalTitle">Add New Asset</h3>
-            <input type="text" id="symbol" placeholder="Symbol (e.g., AAPL)">
+            <h3 id="modalTitle" style="margin-top:0">Add Asset</h3>
+            <input type="text" id="symbol" placeholder="Symbol (e.g. AAPL)">
             <input type="text" id="companyName" placeholder="Company Name">
             <input type="number" id="qty" placeholder="Quantity">
-            <input type="number" id="price" placeholder="Cost Price (Per Share)">
-            
+            <input type="number" id="price" placeholder="Price">
             <select id="marketSelect">
-                <option value="" disabled selected>Select Market (Flag)</option>
                 <option value="🇺🇸">US Market 🇺🇸</option>
                 <option value="🇪🇬">Egyptian Market 🇪🇬</option>
             </select>
-
             <select id="sectorSelect">
-                <option value="" disabled selected>Select Sector</option>
-                <option value="Food & Beverages">Food & Beverages</option>
-                <option value="Basic Resources">Basic Resources</option>
-                <option value="Telecommunications">Telecommunications</option>
-                <option value="Real Estate">Real Estate</option>
-                <option value="Financial Services">Financial Services</option>
-                <option value="Banks">Banks</option>
-                <option value="Healthcare & Pharma">Healthcare & Pharma</option>
-                <option value="Energy">Energy</option>
-                <option value="Tourism & Leisure">Tourism & Leisure</option>
-                <option value="Trade & Distribution">Trade & Distribution</option>
-                <option value="Construction">Construction</option>
                 <option value="Technology">Technology</option>
+                <option value="Financial Services">Financial Services</option>
+                <option value="Healthcare & Pharma">Healthcare & Pharma</option>
+                <option value="Banks">Banks</option>
+                <option value="Energy">Energy</option>
+                <option value="Real Estate">Real Estate</option>
             </select>
-
             <div class="modal-actions">
                 <button class="save-btn" id="saveBtn">Save Asset</button>
                 <button class="cancel-btn" onclick="closeModal()">Cancel</button>
@@ -394,162 +266,166 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
         </div>
     </div>
 
-<script>
-// كل الـ JavaScript اللي كان عندك (بدون أي تغيير)
-const firebaseConfig = {
-    apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
-    authDomain: "stockmarketprox.firebaseapp.com",
-    projectId: "stockmarketprox",
-    storageBucket: "stockmarketprox.appspot.com",
-    messagingSenderId: "797813406491",
-    appId: "1:797813406491:web:c063e068b793925808f1be",
-    measurementId: "G-10V92EEPH5"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    <script>
+    // Firebase Setup
+    const firebaseConfig = {
+        apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
+        authDomain: "stockmarketprox.firebaseapp.com",
+        projectId: "stockmarketprox",
+        storageBucket: "stockmarketprox.appspot.com",
+        messagingSenderId: "797813406491",
+        appId: "1:797813406491:web:c063e068b793925808f1be"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-let portfolio = [];
-let editIndex = null; 
-let charts = {}; 
+    let portfolio = [];
+    let editIndex = null;
+    let charts = {};
 
-const modal = document.getElementById('addModal');
-const saveBtn = document.getElementById('saveBtn');
-const tableBody = document.querySelector('#mainTable tbody');
-
-let macroData = {
-    fedRate: 5.25,
-    treasury10y: 4.15,
-    inflation: 3.10,
-    gold: 2150.00
-};
-
-window.onload = () => {
-    initCharts();
-    simulateMacroData();
-    
-    db.collection("myPortfolio").onSnapshot((snapshot) => {
-        portfolio = [];
-        snapshot.forEach((doc) => {
-            let data = doc.data();
-            data.id = doc.id;
-            portfolio.push(data);
+    window.onload = () => {
+        initCharts();
+        simulateMacroData();
+        db.collection("myPortfolio").onSnapshot(snap => {
+            portfolio = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+            render();
         });
-        render(); 
-    });
-};
-
-function openModal() {
-    editIndex = null;
-    document.getElementById('modalTitle').innerText = "Add New Asset";
-    clearInputs();
-    modal.style.display = 'flex';
-}
-
-function closeModal() {
-    modal.style.display = 'none';
-}
-
-function clearInputs() { 
-    document.querySelectorAll('.modal-content input').forEach(i => i.value = ''); 
-    document.getElementById('sectorSelect').value = '';
-    document.getElementById('marketSelect').value = '';
-}
-
-function initCharts() {
-    // ... (كل كود الـ charts زي ما هو عندك بالظبط)
-    // أنا هسيبه زي ما هو عشان ما يطولش، بس لو عايز أعدله قولي
-    if(charts.sector) charts.sector.destroy();
-    if(charts.sparkline) charts.sparkline.destroy();
-    if(charts.dist) charts.dist.destroy();
-
-    const chartOpts = { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { legend: { display: false } } 
     };
 
-    const drawPercentagesPlugin = { /* نفس الكود السابق */ };
+    function initCharts() {
+        const commonOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+        
+        charts.sector = new Chart(document.getElementById('sectorChart'), {
+            type: 'doughnut',
+            data: { labels: [], datasets: [{ data: [], backgroundColor: ['#58a6ff', '#f0883e', '#d299ff', '#f85149', '#3fb950', '#ff9f43'], cutout: '70%' }] },
+            options: commonOpts
+        });
 
-    // باقي initCharts() ... (انسخها من كودك القديم لو مش موجودة هنا)
-    // للاختصار، لو الكود ده مش شغال، قولي "الـ charts مش شغالة" وأعدلها
-}
+        charts.dist = new Chart(document.getElementById('distChart'), {
+            type: 'doughnut',
+            data: { labels: [], datasets: [{ data: [], backgroundColor: ['#58a6ff', '#3fb950', '#f85149', '#d299ff', '#f0883e'], cutout: '70%' }] },
+            options: commonOpts
+        });
 
-function getActionSignal(performancePct) {
-    const perf = parseFloat(performancePct);
-    if (perf >= 7) return { text: 'Reduce / Profit', class: 'sig-reduce' };
-    else if (perf <= -5) return { text: 'Accumulate', class: 'sig-accumulate' };
-    else return { text: 'Hold', class: 'sig-hold' };
-}
+        charts.candle = new ApexCharts(document.querySelector("#candleChart"), {
+            series: [{ data: [] }],
+            chart: { type: 'candlestick', height: '100%', toolbar: { show: false }, background: 'transparent' },
+            theme: { mode: 'dark' },
+            xaxis: { type: 'datetime' },
+            plotOptions: { candlestick: { colors: { upward: '#3fb950', downward: '#f85149' } } }
+        });
+        charts.candle.render();
+    }
 
-function render() {
-    if (!tableBody) return;
-    tableBody.innerHTML = '';
-    
-    let totalCurrentValue = 0;
-    let totalCostBasis = 0;
-    
-    let sectorData = { 
-        'Food & Beverages': 0, 'Basic Resources': 0, 'Telecommunications': 0, 'Real Estate': 0, 
-        'Financial Services': 0, 'Banks': 0, 'Healthcare & Pharma': 0, 'Energy': 0, 
-        'Tourism & Leisure': 0, 'Trade & Distribution': 0, 'Construction': 0, 'Technology': 0 
+    function render() {
+        const tbody = document.querySelector('#mainTable tbody');
+        tbody.innerHTML = '';
+        let total = 0;
+        let sectorMap = {};
+
+        portfolio.forEach((item, i) => {
+            const val = item.qty * item.price;
+            total += val;
+            sectorMap[item.sector] = (sectorMap[item.sector] || 0) + val;
+            
+            // Random Signal for Simulation
+            const signals = [
+                {t: 'Accumulate', c: 'sig-accumulate'},
+                {t: 'Hold', c: 'sig-hold'},
+                {t: 'Reduce', c: 'sig-reduce'}
+            ];
+            const sig = signals[Math.floor(Math.random() * 3)];
+
+            tbody.innerHTML += `
+                <tr onclick="updateCandle('${item.symbol}', ${item.price})">
+                    <td><strong>${item.market} ${item.symbol}</strong><br><small style="color:var(--text-dim)">${item.name}</small></td>
+                    <td>$${parseFloat(item.price).toFixed(2)}</td>
+                    <td>${item.qty}</td>
+                    <td style="color:var(--accent); font-weight:700">$${val.toLocaleString()}</td>
+                    <td><span class="signal-badge ${sig.c}">${sig.t}</span></td>
+                    <td>
+                        <button onclick="event.stopPropagation(); editAsset(${i})" style="background:none; border:none; cursor:pointer">✏️</button>
+                        <button onclick="event.stopPropagation(); removeAsset(${i})" style="background:none; border:none; cursor:pointer">🗑️</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('totalNetWorth').innerText = `$${total.toLocaleString()}`;
+        
+        // Update Charts
+        charts.sector.data.labels = Object.keys(sectorMap);
+        charts.sector.data.datasets[0].data = Object.values(sectorMap);
+        charts.sector.update();
+
+        charts.dist.data.labels = portfolio.map(p => p.symbol);
+        charts.dist.data.datasets[0].data = portfolio.map(p => p.qty * p.price);
+        charts.dist.update();
+
+        if(portfolio.length > 0) {
+            document.getElementById('bestAsset').innerText = portfolio[0].symbol;
+            document.getElementById('worstAsset').innerText = portfolio[portfolio.length-1].symbol;
+        }
+    }
+
+    function updateCandle(sym, price) {
+        document.getElementById('candleLabel').innerText = `Performance: ${sym}`;
+        const data = [];
+        let base = parseFloat(price);
+        for(let i=0; i<10; i++) {
+            data.push({ x: new Date(2026, 3, i+1), y: [base, base+2, base-1, base+1] });
+            base += (Math.random() - 0.5) * 2;
+        }
+        charts.candle.updateSeries([{ data: data }]);
+    }
+
+    function openModal() { editIndex = null; document.getElementById('addModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+
+    document.getElementById('saveBtn').onclick = async () => {
+        const data = {
+            symbol: document.getElementById('symbol').value.toUpperCase(),
+            name: document.getElementById('companyName').value,
+            qty: parseFloat(document.getElementById('qty').value),
+            price: parseFloat(document.getElementById('price').value),
+            market: document.getElementById('marketSelect').value,
+            sector: document.getElementById('sectorSelect').value
+        };
+        if(editIndex !== null) await db.collection("myPortfolio").doc(portfolio[editIndex].id).update(data);
+        else await db.collection("myPortfolio").add(data);
+        closeModal();
     };
 
-    let bestPerformance = -Infinity;
-    let worstPerformance = Infinity;
-    let bestSymbol = "---";
-    let worstSymbol = "---";
+    window.editAsset = (i) => {
+        editIndex = i;
+        const p = portfolio[i];
+        document.getElementById('symbol').value = p.symbol;
+        document.getElementById('companyName').value = p.name;
+        document.getElementById('qty').value = p.qty;
+        document.getElementById('price').value = p.price;
+        document.getElementById('addModal').style.display = 'flex';
+    };
 
-    portfolio.forEach((item, index) => {
-        let currentVal = item.qty * item.price;
-        totalCurrentValue += currentVal;
+    window.removeAsset = async (i) => { if(confirm("Delete?")) await db.collection("myPortfolio").doc(portfolio[i].id).delete(); };
 
-        let simulatedPerf = ((Math.random() * 25) - 10).toFixed(2); 
-        
-        let costBasis = currentVal / (1 + (parseFloat(simulatedPerf) / 100));
-        totalCostBasis += costBasis;
+    function simulateMacroData() {
+        setInterval(() => {
+            const items = ['fedRateItem', 'goldItem'];
+            const id = items[Math.floor(Math.random()*2)];
+            const el = document.getElementById(id);
+            const up = Math.random() > 0.5;
+            el.classList.add(up ? 'macro-up' : 'macro-down');
+            setTimeout(() => el.classList.remove('macro-up', 'macro-down'), 1000);
+        }, 3000);
+    }
 
-        if (parseFloat(simulatedPerf) > bestPerformance) {
-            bestPerformance = parseFloat(simulatedPerf);
-            bestSymbol = item.symbol.toUpperCase();
-        }
-        
-        if (parseFloat(simulatedPerf) < worstPerformance) {
-            worstPerformance = parseFloat(simulatedPerf);
-            worstSymbol = item.symbol.toUpperCase();
-        }
-
-        if (item.sector) sectorData[item.sector] += currentVal;
-
-        const marketFlag = item.market || '🇺🇸';
-        const signal = getActionSignal(simulatedPerf);
-
-        tableBody.innerHTML += `
-            <tr data-symbol="${item.symbol.toUpperCase()}" onclick="updateCandleForAsset('${item.symbol}', ${item.price})" style="cursor:pointer;">
-                <td>
-                    <strong>${marketFlag} ${item.symbol.toUpperCase()}</strong>
-                    <span class="company-name">${item.name}</span>
-                </td>
-                <td>$${parseFloat(item.price).toFixed(2)}</td>
-                <td>${item.qty}</td>
-                <td style="color:var(--accent); font-weight:600;">$${currentVal.toLocaleString()}</td>
-                <td>
-                    <span class="signal-badge ${signal.class}">${signal.text}</span>
-                </td>
-                <td>
-                    <button class="edit-btn" onclick="event.stopPropagation(); editAsset(${index})">✏️</button>
-                    <button class="delete-btn" onclick="event.stopPropagation(); remove(${index})">🗑️</button>
-                </td>
-            </tr>`;
-    });
-
-    // باقي كود الـ render (تحديث الـ net worth, charts ... إلخ) زي ما هو عندك
-    document.getElementById('totalNetWorth').innerText = `$${totalCurrentValue.toLocaleString()}`;
-    // ... (أكمل باقي الـ render من كودك القديم)
-}
-
-// باقي الدوال (updateCandleForAsset, filterTable, saveBtn.onclick, editAsset, remove, exportToCSV, simulateMacroData)
-// انسخها كما هي من كودك السابق
-
-</script>
+    function exportToCSV() {
+        let csv = "Symbol,Qty,Price\n" + portfolio.map(p => `${p.symbol},${p.qty},${p.price}`).join("\n");
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'portfolio.csv'; a.click();
+    }
+    </script>
 </body>
 </html>
