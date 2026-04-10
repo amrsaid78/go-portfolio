@@ -179,80 +179,121 @@
     </div>
 
     <script>
-        // 1. إدارة الألوان (Theme Management)
-        function toggleTheme() {
-            const body = document.body;
-            const btn = document.getElementById('themeBtn');
-            
-            body.classList.toggle('light-mode');
-            
-            if (body.classList.contains('light-mode')) {
-                localStorage.setItem('theme', 'light');
-                btn.innerText = "Switch to Dark Mode";
-            } else {
-                localStorage.setItem('theme', 'dark');
-                btn.innerText = "Switch to Light Mode";
-            }
-        }
+<script>
+    // 1. إعدادات Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
+        authDomain: "stockmarketprox.firebaseapp.com",
+        projectId: "stockmarketprox",
+        storageBucket: "stockmarketprox.appspot.com",
+        messagingSenderId: "797813406491",
+        appId: "1:797813406491:web:c063e068b793925808f1be"
+    };
 
-        // 2. تصدير البيانات (Export)
-        function exportBackup() {
-            const portfolio = localStorage.getItem('myPortfolio');
-            if (!portfolio || portfolio === '[]') {
-                alert("No data to export!");
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // --- إدارة الألوان (تبقى كما هي في LocalStorage) ---
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('themeBtn');
+        body.classList.toggle('light-mode');
+        
+        if (body.classList.contains('light-mode')) {
+            localStorage.setItem('theme', 'light');
+            btn.innerText = "Switch to Dark Mode";
+        } else {
+            localStorage.setItem('theme', 'dark');
+            btn.innerText = "Switch to Light Mode";
+        }
+    }
+
+    // --- تصدير البيانات من Firebase (Export) ---
+    async function exportBackup() {
+        try {
+            const snapshot = await db.collection("myPortfolio").get();
+            let portfolioData = [];
+            snapshot.forEach(doc => portfolioData.push(doc.data()));
+
+            if (portfolioData.length === 0) {
+                alert("No data found in Firebase to export!");
                 return;
             }
-            const blob = new Blob([portfolio], { type: "application/json" });
+
+            const blob = new Blob([JSON.stringify(portfolioData, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Portfolio_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `Cloud_Portfolio_Backup_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
+        } catch (error) {
+            console.error("Export Error:", error);
+            alert("Failed to export data from cloud.");
         }
+    }
 
-        // 3. استيراد البيانات (Import)
-        function importBackup(input) {
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (confirm("Restore this backup? Current data will be merged.")) {
-                        const current = JSON.parse(localStorage.getItem('myPortfolio')) || [];
-                        localStorage.setItem('myPortfolio', JSON.stringify([...current, ...data]));
-                        alert("Import successful!");
-                        location.reload();
-                    }
-                } catch (err) { alert("Invalid file format!"); }
-            };
-            reader.readAsText(file);
-        }
-
-        // 4. مسح البيانات (Reset)
-        function resetPortfolio() {
-            if (confirm("⚠️ DELETE EVERYTHING? This cannot be undone!")) {
-                localStorage.setItem('myPortfolio', '[]');
-                alert("Data cleared.");
-                location.reload();
-            }
-        }
-
-        // عند التحميل
-        window.onload = () => {
-            // استرجاع الثيم
-            if (localStorage.getItem('theme') === 'light') {
-                document.body.classList.add('light-mode');
-                document.getElementById('themeBtn').innerText = "Switch to Dark Mode";
-            }
-            // استرجاع العملة
-            const savedCurrency = localStorage.getItem('baseCurrency');
-            if (savedCurrency) document.getElementById('currencySelect').value = savedCurrency;
+    // --- استيراد البيانات إلى Firebase (Import) ---
+    function importBackup(input) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (confirm(`Restore ${data.length} assets? They will be added to your cloud portfolio.`)) {
+                    const batch = db.batch();
+                    data.forEach(item => {
+                        const newDoc = db.collection("myPortfolio").doc();
+                        batch.set(newDoc, item);
+                    });
+                    await batch.commit();
+                    alert("Cloud Import Successful!");
+                    location.reload();
+                }
+            } catch (err) { alert("Invalid backup file!"); }
         };
+        reader.readAsText(file);
+    }
 
-        document.getElementById('currencySelect').addEventListener('change', (e) => {
+    // --- مسح كل بيانات Firebase (Reset) ---
+    async function resetPortfolio() {
+        if (confirm("⚠️ DELETE CLOUD DATA? This will wipe your portfolio from Firebase!")) {
+            try {
+                const snapshot = await db.collection("myPortfolio").get();
+                const batch = db.batch();
+                snapshot.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                
+                alert("Cloud Portfolio Cleared.");
+                location.reload();
+            } catch (error) {
+                alert("Error clearing data: " + error);
+            }
+        }
+    }
+
+    // --- عند التحميل ---
+    window.onload = () => {
+        // استرجاع الثيم
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            const themeBtn = document.getElementById('themeBtn');
+            if(themeBtn) themeBtn.innerText = "Switch to Dark Mode";
+        }
+        // استرجاع العملة
+        const savedCurrency = localStorage.getItem('baseCurrency');
+        const currencySelect = document.getElementById('currencySelect');
+        if (savedCurrency && currencySelect) currencySelect.value = savedCurrency;
+    };
+
+    const currencySelect = document.getElementById('currencySelect');
+    if(currencySelect) {
+        currencySelect.addEventListener('change', (e) => {
             localStorage.setItem('baseCurrency', e.target.value);
-            alert("Currency updated!");
+            alert("Currency preference saved locally!");
         });
-    </script>
+    }
+</script>
 </body>
 </html>
