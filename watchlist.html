@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watchlist - Stock Market Pro X</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -140,90 +142,127 @@
 </div>
 
 <script>
-    let watchlist = [
-        { symbol: 'AAPL', name: 'Apple Inc.', price: 175.50, sector: 'growth', market: '🇺🇸' },
-        { symbol: 'MSFT', name: 'Microsoft', price: 410.20, sector: 'growth', market: '🇺🇸' }
-    ];
+// 1. إعدادات Firebase (نفس اللي استخدمناها قبل كدة)
+const firebaseConfig = {
+    apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
+    authDomain: "stockmarketprox.firebaseapp.com",
+    projectId: "stockmarketprox",
+    storageBucket: "stockmarketprox.appspot.com",
+    messagingSenderId: "797813406491",
+    appId: "1:797813406491:web:c063e068b793925808f1be"
+};
 
-    let selectedAsset = null;
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
 
-    function renderWatchlist() {
-        const tbody = document.querySelector('#watchTable tbody');
-        tbody.innerHTML = '';
-        watchlist.forEach((item, index) => {
-            let fv = item.sector === 'growth' ? item.price * 1.1 : item.price * 0.9;
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>${item.market || ''} ${item.symbol}</strong><br><small style="color:gray">${item.name}</small></td>
-                    <td>$${item.price.toFixed(2)}</td>
-                    <td class="positive">+1.2%</td>
-                    <td>
-                        $${fv.toFixed(2)}<br>
-                        <span class="valuation-badge val-undervalued">Good Buy</span>
-                    </td>
-                    <td>
-                        <button class="buy-btn" onclick="openBuyModal(${index})">Buy</button>
-                        <button class="remove-btn" onclick="removeAsset(${index})">Remove</button>
-                    </td>
-                </tr>`;
+let watchlist = [];
+let selectedAsset = null;
+
+// 2. تحميل قائمة المتابعة من Firebase
+window.onload = () => {
+    db.collection("myWatchlist").onSnapshot((snapshot) => {
+        watchlist = [];
+        snapshot.forEach((doc) => {
+            watchlist.push({ id: doc.id, ...doc.data() });
         });
-    }
+        renderWatchlist();
+    });
+};
 
-    // Modal Add functions
-    function openAddModal() { document.getElementById('addModal').style.display = 'flex'; }
-    function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
-    function saveToWatchlist() {
-        const s = document.getElementById('addSymbol').value.toUpperCase();
-        if(!s) return alert("Symbol required");
-        watchlist.push({
-            symbol: s,
-            name: document.getElementById('addName').value || 'Asset',
-            price: parseFloat(document.getElementById('addPrice').value) || 100,
-            sector: document.getElementById('addSector').value,
-            market: '🇺🇸'
-        });
-        renderWatchlist(); closeAddModal();
-    }
-
-    // --- الربط الحقيقي مع المحفظة ---
-    function openBuyModal(index) {
-        selectedAsset = watchlist[index];
-        document.getElementById('buyTitle').innerText = `Buy ${selectedAsset.symbol}`;
-        document.getElementById('buySub').innerText = `Add ${selectedAsset.name} to portfolio.`;
-        document.getElementById('buyPrice').value = selectedAsset.price;
-        document.getElementById('buyModal').style.display = 'flex';
-    }
-
-    function closeBuyModal() { document.getElementById('buyModal').style.display = 'none'; }
-
-    function processPurchase() {
-        const qty = parseFloat(document.getElementById('buyQty').value);
-        const price = parseFloat(document.getElementById('buyPrice').value);
-
-        // 1. هات الداتا القديمة من المخزن (LocalStorage)
-        let portfolio = JSON.parse(localStorage.getItem('myPortfolio')) || [];
-
-        // 2. ضيف العملية الجديدة
-        portfolio.push({
-            symbol: selectedAsset.symbol,
-            name: selectedAsset.name,
-            price: price,
-            amount: qty,
-            total: price * qty,
-            date: new Date().toLocaleDateString()
-        });
-
-        // 3. احفظ الداتا الجديدة في المخزن
-        localStorage.setItem('myPortfolio', JSON.stringify(portfolio));
-
-        alert("Added to Dashboard!");
-        closeBuyModal();
-    }
-
-    function removeAsset(index) { watchlist.splice(index, 1); renderWatchlist(); }
+function renderWatchlist() {
+    const tbody = document.querySelector('#watchTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
     
-    window.onload = renderWatchlist;
-</script>
+    watchlist.forEach((item, index) => {
+        // حساب القيمة العادلة (تجريبي)
+        let fv = item.sector === 'growth' ? item.price * 1.1 : item.price * 0.9;
+        
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${item.market || '🇺🇸'} ${item.symbol.toUpperCase()}</strong><br><small style="color:gray">${item.name}</small></td>
+                <td>$${parseFloat(item.price).toFixed(2)}</td>
+                <td class="positive">+1.2%</td>
+                <td>
+                    $${fv.toFixed(2)}<br>
+                    <span class="valuation-badge val-undervalued">Good Buy</span>
+                </td>
+                <td>
+                    <button class="buy-btn" onclick="openBuyModal(${index})">Buy</button>
+                    <button class="remove-btn" onclick="removeAsset('${item.id}')">Remove</button>
+                </td>
+            </tr>`;
+    });
+}
 
+// 3. إضافة سهم جديد لقائمة المتابعة في Firebase
+function saveToWatchlist() {
+    const s = document.getElementById('addSymbol').value.toUpperCase();
+    if(!s) return alert("Symbol required");
+
+    const newAsset = {
+        symbol: s,
+        name: document.getElementById('addName').value || 'Asset',
+        price: parseFloat(document.getElementById('addPrice').value) || 100,
+        sector: document.getElementById('addSector').value || 'other',
+        market: '🇺🇸',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    db.collection("myWatchlist").add(newAsset)
+        .then(() => {
+            closeAddModal();
+            // مسح الخانات بعد الإضافة
+            document.getElementById('addSymbol').value = '';
+            document.getElementById('addName').value = '';
+        })
+        .catch(err => alert("Error: " + err));
+}
+
+// 4. عملية الشراء: نقل السهم من الـ Watchlist إلى الـ Portfolio الحقيقي
+function processPurchase() {
+    const qty = parseFloat(document.getElementById('buyQty').value);
+    const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+
+    if(!qty || qty <= 0) return alert("Please enter quantity");
+
+    // إضافة السهم لمجموعة المحفظة (Portfolio)
+    db.collection("myPortfolio").add({
+        symbol: selectedAsset.symbol,
+        name: selectedAsset.name,
+        price: buyPrice, // سعر الشراء الحالي
+        qty: qty,        // الكمية
+        sector: selectedAsset.sector || 'other',
+        market: selectedAsset.market || '🇺🇸',
+        date: new Date().toLocaleDateString()
+    })
+    .then(() => {
+        alert(`${selectedAsset.symbol} added to Dashboard!`);
+        closeBuyModal();
+    })
+    .catch(err => alert("Purchase failed: " + err));
+}
+
+// مسح سهم من قائمة المتابعة
+function removeAsset(id) {
+    if(confirm("Remove from watchlist?")) {
+        db.collection("myWatchlist").doc(id).delete();
+    }
+}
+
+// وظائف الـ Modals
+function openAddModal() { document.getElementById('addModal').style.display = 'flex'; }
+function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+function openBuyModal(index) {
+    selectedAsset = watchlist[index];
+    document.getElementById('buyTitle').innerText = `Buy ${selectedAsset.symbol}`;
+    document.getElementById('buySub').innerText = `Add ${selectedAsset.name} to portfolio.`;
+    document.getElementById('buyPrice').value = selectedAsset.price;
+    document.getElementById('buyModal').style.display = 'flex';
+}
+function closeBuyModal() { document.getElementById('buyModal').style.display = 'none'; }
+</script>
 </body>
 </html>
