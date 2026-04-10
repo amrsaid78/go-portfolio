@@ -37,23 +37,26 @@ body {
     font-family: 'Inter', sans-serif; 
     background-color: var(--bg-dark); 
     color: var(--text-main); 
-    height: 100vh;
-    overflow: hidden; 
+    /* التعديل هنا: سمحنا للصفحة بالنزول */
+    min-height: 100vh;
+    overflow-y: auto; 
     direction: ltr; 
 }
 
-.container { display: flex; height: 100vh; width: 100vw; }
+.container { display: flex; min-height: 100vh; width: 100vw; }
 
-/* تم تعديل الـ Sidebar هنا لضمان الثبات التام */
 .sidebar { 
     width: 240px; 
     background: var(--sidebar-bg); 
     padding: 25px 15px; 
     border-right: 1px solid var(--border); 
     flex-shrink: 0; 
+    /* جعل السايد بار ثابت في مكانه أثناء النزول */
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
 
-/* تم تعديل اللوجو لمنع الهزة */
 .logo { 
     font-size: 20px; 
     font-weight: 800; 
@@ -73,8 +76,8 @@ nav li.active, nav li:hover { background: #1f2937; color: #fff; }
     display: flex; 
     flex-direction: column; 
     gap: 15px; 
-    height: 100vh;
-    overflow: hidden; 
+    /* التعديل هنا: لغينا الارتفاع الثابت */
+    min-height: 100vh;
 }
 
 header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
@@ -85,7 +88,6 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
 .add-btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 .export-btn { background: transparent; color: var(--text-dim); border: 1px solid var(--border); padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
-/* شريط المؤشرات الاقتصادية */
 .macro-bar {
     display: flex;
     gap: 15px;
@@ -103,7 +105,6 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
     flex-direction: column;
     align-items: center;
     font-size: 13px;
-    transition: background-color 0.3s ease;
     padding: 4px 10px;
     border-radius: 6px;
 }
@@ -111,18 +112,15 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
 .macro-label { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 .macro-value { font-weight: 700; color: #fff; margin-top: 2px; }
 
-.macro-up { background-color: rgba(63, 185, 80, 0.15) !important; }
-.macro-down { background-color: rgba(248, 81, 73, 0.15) !important; }
-
 /* Grid Layout */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr; 
-    grid-template-rows: 200px 110px auto auto; 
+    /* التعديل هنا: جعل الصفوف تتمدد تلقائياً */
+    grid-template-rows: auto; 
     gap: 15px;
     flex: 1;
-    overflow-y: auto;
-    padding-bottom: 20px;
+    padding-bottom: 40px;
 }
 
 .card { 
@@ -133,99 +131,44 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
     position: relative;
     display: flex;
     flex-direction: column;
-    overflow: hidden; 
 }
 
 .card-label { font-size: 11px; color: var(--text-dim); font-weight: 600; position: absolute; top: 15px; left: 20px; z-index: 5; letter-spacing: 0.5px; }
 
-.grid-1 { grid-column: 1 / 2; grid-row: 1 / 2; }
-.grid-2 { grid-column: 2 / 3; grid-row: 1 / 3; }
-.grid-3 { grid-column: 3 / 4; grid-row: 1 / 3; }
-
-.grid-best { grid-column: 1 / 2; grid-row: 2 / 3; }
-.grid-worst { grid-column: 1 / 2; grid-row: 3 / 4; }
-
-.grid-5 { grid-column: 2 / 4; grid-row: 3 / 4; min-height: 250px; }
-.grid-4 { grid-column: 1 / 4; grid-row: 4 / 5; min-height: 250px; }
+/* تنسيق الجريد ليناسب المحتوى الجديد */
+.grid-1 { grid-column: 1 / 2; }
+.grid-2 { grid-column: 2 / 3; }
+.grid-3 { grid-column: 3 / 4; }
+.grid-best, .grid-worst { grid-column: 1 / 2; }
+.grid-5 { grid-column: 2 / 4; min-height: 250px; }
+.grid-4 { grid-column: 1 / 4; min-height: 300px; }
 
 .canvas-wrapper { 
     flex: 1; 
-    width: 100%; 
-    height: 100%; 
+    min-height: 180px; 
     margin-top: 25px; 
-    position: relative; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
-.canvas-wrapper canvas { 
-    max-width: 100% !important; 
-    max-height: none !important; 
-}
-
-.net-worth-card { justify-content: space-between; align-items: center; padding-top: 40px; }
-.net-worth-content { text-align: center; margin-top: 20px; }
-.net-worth-content h2 { font-size: 32px; margin: 0; font-weight: 800; color: #fff; }
-
-.kpi-content { margin-top: auto; text-align: left; }
-.kpi-content h3 { font-size: 20px; margin: 0 0 5px 0; color: #fff; font-weight: 700; }
-
-.pnl-text { font-size: 13px; font-weight: 600; display: block; margin-top: 5px; }
-.positive { color: var(--accent); }
-.negative { color: var(--red-alert); }
-.neutral { color: var(--text-dim); }
-
-.sparkline-wrapper { width: 100%; height: 60px; margin-top: auto; position: relative; }
-
-/* Table Section */
-.table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0;}
-#searchInput { background: var(--bg-dark); border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; width: 200px; font-size: 13px; }
 
 .table-scroll { 
-    flex: 1; 
+    /* التعديل هنا: لغينا الـ Scroll الداخلي */
     overflow: visible !important; 
     max-height: none !important; 
-    padding-right: 15px; 
 } 
 
-.table-scroll::-webkit-scrollbar { width: 6px; }
-.table-scroll::-webkit-scrollbar-track { background: transparent; }
-.table-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
-.table-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-.table-scroll::-webkit-scrollbar-button { display: none !important; height: 0 !important; }
-
 table { width: 100%; border-collapse: collapse; text-align: left; }
-th { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; padding-bottom: 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card-bg); z-index: 10; }
-td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertical-align: middle;}
-.company-name { font-size: 11px; color: var(--text-dim); display: block; }
-
-.edit-btn, .delete-btn { background: transparent; border: 1px solid var(--border); padding: 5px; border-radius: 4px; cursor: pointer; margin-right: 3px; }
-.edit-btn { color: #58a6ff; }
-.delete-btn { color: var(--red-alert); }
-
-/* إشارات القرار */
-.signal-badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    display: inline-block;
+th { 
+    color: var(--text-dim); 
+    font-size: 11px; 
+    font-weight: 600; 
+    text-transform: uppercase; 
+    padding-bottom: 12px; 
+    border-bottom: 1px solid var(--border); 
 }
-.sig-accumulate { background: rgba(88, 166, 255, 0.15); color: var(--info); }
-.sig-hold { background: rgba(219, 171, 9, 0.15); color: var(--warning); }
-.sig-reduce { background: rgba(248, 81, 73, 0.15); color: var(--red-alert); }
+td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; }
 
-/* Modal */
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 9999; }
 .modal-content { width: 360px; background: var(--card-bg); border: 1px solid var(--border); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
-.modal-content h3 { margin: 0 0 10px 0; color: #fff; }
-.modal-content input, .modal-content select { width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; }
-.modal-actions { display: flex; gap: 10px; margin-top: 10px; }
-.save-btn { flex: 1; background: var(--accent); border: none; color: #fff; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-.cancel-btn { flex: 1; background: var(--border); border: none; color: #fff; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 </style>
-
 <body>
 
     <div class="container">
