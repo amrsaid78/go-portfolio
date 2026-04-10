@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchlist - Stock Market Pro X</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-main: #0d1117;
+            --bg-card: #161b22;
+            --border: #30363d;
+            --text-main: #e6edf3;
+            --text-dim: #8b949e;
+            --accent: #58a6ff;
+            --positive: #3fb950;
+            --negative: #f85149;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+        .container { display: flex; width: 100%; height: 100%; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: var(--bg-card); padding: 25px 15px; border-right: 1px solid var(--border); }
+        .logo { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 35px; }
+        .logo span { color: var(--accent); }
+        nav ul { list-style: none; }
+        nav li { padding: 12px 15px; color: var(--text-dim); cursor: pointer; border-radius: 8px; margin-bottom: 5px; font-size: 14px; transition: 0.2s; }
+        nav li.active, nav li:hover { background: #1f2937; color: #fff; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .add-btn { background-color: var(--positive); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+
+        .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .table-header input { background: var(--bg-main); border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; width: 250px; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { color: var(--text-dim); font-size: 11px; text-transform: uppercase; padding: 12px; border-bottom: 1px solid var(--border); }
+        td { padding: 15px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        
+        .valuation-badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .val-undervalued { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
+        .val-fair { background: rgba(219, 171, 9, 0.15); color: #dbab09; }
+        .val-overvalued { background: rgba(248, 81, 73, 0.15); color: #f85149; }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; width: 400px; padding: 25px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: var(--text-dim); font-size: 12px; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 6px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+        .buy-btn { background: rgba(63, 185, 80, 0.1); color: var(--positive); border: 1px solid var(--positive); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .remove-btn { background: rgba(248, 81, 73, 0.1); color: var(--negative); border: 1px solid var(--negative); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="logo">Stock Market <span>Pro X</span></div>
+        <nav>
+            <ul>
+                <li onclick="window.location.href='index.html'" class="active">Dashboard</li>
+                <li onclick="window.location.href='analytics.html'">Analytics</li>
+                <li onclick="window.location.href='reports.html'">Reports</li>
+                <li onclick="window.location.href='Watchlist.html'">Watchlist</li>
+                <li onclick="window.location.href='settings.html'">Settings</li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <div>
+                <h1>Market Watchlist</h1>
+                <p>Track potential investments and fair values.</p>
+            </div>
+            <button class="add-btn" onclick="openAddModal()">+ Add Symbol</button>
+        </header>
+
+        <div class="card">
+            <div class="table-header">
+                <span style="font-weight:700;">My Watchlist</span>
+                <input type="text" id="searchInput" placeholder="Search..." oninput="filterTable()">
+            </div>
+            <table id="watchTable">
+                <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Price</th>
+                        <th>Day Change</th>
+                        <th>Fair Value</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="addModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2>Add to Watchlist</h2>
+        <div class="form-group"><label>Symbol</label><input type="text" id="addSymbol"></div>
+        <div class="form-group"><label>Company Name</label><input type="text" id="addName"></div>
+        <div class="form-group"><label>Current Price</label><input type="number" id="addPrice" step="0.01"></div>
+        <div class="form-group">
+            <label>Sector</label>
+            <select id="addSector">
+                <option value="growth">Tech / Growth (DCF)</option>
+                <option value="classic">Banking / Classic (Graham)</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="remove-btn" style="background:none;" onclick="closeAddModal()">Cancel</button>
+            <button class="add-btn" onclick="saveToWatchlist()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div id="buyModal" class="modal-overlay">
+    <div class="modal-content" style="width: 350px;">
+        <h2 id="buyTitle">Buy Asset</h2>
+        <p id="buySub" style="font-size:12px; color:var(--text-dim); margin-bottom:15px;"></p>
+        <div class="form-group"><label>Quantity</label><input type="number" id="buyQty" value="1"></div>
+        <div class="form-group"><label>Price ($)</label><input type="number" id="buyPrice" step="0.01"></div>
+        <div class="modal-actions">
+            <button class="remove-btn" style="background:none;" onclick="closeBuyModal()">Cancel</button>
+            <button class="add-btn" onclick="processPurchase()">Confirm Buy</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 1. إعدادات Firebase (نفس اللي استخدمناها قبل كدة)
+const firebaseConfig = {
+    apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
+    authDomain: "stockmarketprox.firebaseapp.com",
+    projectId: "stockmarketprox",
+    storageBucket: "stockmarketprox.appspot.com",
+    messagingSenderId: "797813406491",
+    appId: "1:797813406491:web:c063e068b793925808f1be"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+
+let watchlist = [];
+let selectedAsset = null;
+
+// 2. تحميل قائمة المتابعة من Firebase
+window.onload = () => {
+    db.collection("myWatchlist").onSnapshot((snapshot) => {
+        watchlist = [];
+        snapshot.forEach((doc) => {
+            watchlist.push({ id: doc.id, ...doc.data() });
+        });
+        renderWatchlist();
+    });
+};
+
+function renderWatchlist() {
+    const tbody = document.querySelector('#watchTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    watchlist.forEach((item, index) => {
+        // حساب القيمة العادلة (تجريبي)
+        let fv = item.sector === 'growth' ? item.price * 1.1 : item.price * 0.9;
+        
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${item.market || '🇺🇸'} ${item.symbol.toUpperCase()}</strong><br><small style="color:gray">${item.name}</small></td>
+                <td>$${parseFloat(item.price).toFixed(2)}</td>
+                <td class="positive">+1.2%</td>
+                <td>
+                    $${fv.toFixed(2)}<br>
+                    <span class="valuation-badge val-undervalued">Good Buy</span>
+                </td>
+                <td>
+                    <button class="buy-btn" onclick="openBuyModal(${index})">Buy</button>
+                    <button class="remove-btn" onclick="removeAsset('${item.id}')">Remove</button>
+                </td>
+            </tr>`;
+    });
+}
+
+// 3. إضافة سهم جديد لقائمة المتابعة في Firebase
+function saveToWatchlist() {
+    const s = document.getElementById('addSymbol').value.toUpperCase();
+    if(!s) return alert("Symbol required");
+
+    const newAsset = {
+        symbol: s,
+        name: document.getElementById('addName').value || 'Asset',
+        price: parseFloat(document.getElementById('addPrice').value) || 100,
+        sector: document.getElementById('addSector').value || 'other',
+        market: '🇺🇸',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    db.collection("myWatchlist").add(newAsset)
+        .then(() => {
+            closeAddModal();
+            // مسح الخانات بعد الإضافة
+            document.getElementById('addSymbol').value = '';
+            document.getElementById('addName').value = '';
+        })
+        .catch(err => alert("Error: " + err));
+}
+
+// 4. عملية الشراء: نقل السهم من الـ Watchlist إلى الـ Portfolio الحقيقي
+function processPurchase() {
+    const qty = parseFloat(document.getElementById('buyQty').value);
+    const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+
+    if(!qty || qty <= 0) return alert("Please enter quantity");
+
+    // إضافة السهم لمجموعة المحفظة (Portfolio)
+    db.collection("myPortfolio").add({
+        symbol: selectedAsset.symbol,
+        name: selectedAsset.name,
+        price: buyPrice, // سعر الشراء الحالي
+        qty: qty,        // الكمية
+        sector: selectedAsset.sector || 'other',
+        market: selectedAsset.market || '🇺🇸',
+        date: new Date().toLocaleDateString()
+    })
+    .then(() => {
+        alert(`${selectedAsset.symbol} added to Dashboard!`);
+        closeBuyModal();
+    })
+    .catch(err => alert("Purchase failed: " + err));
+}
+
+// مسح سهم من قائمة المتابعة
+function removeAsset(id) {
+    if(confirm("Remove from watchlist?")) {
+        db.collection("myWatchlist").doc(id).delete();
+    }
+}
+
+// وظائف الـ Modals
+function openAddModal() { document.getElementById('addModal').style.display = 'flex'; }
+function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+function openBuyModal(index) {
+    selectedAsset = watchlist[index];
+    document.getElementById('buyTitle').innerText = `Buy ${selectedAsset.symbol}`;
+    document.getElementById('buySub').innerText = `Add ${selectedAsset.name} to portfolio.`;
+    document.getElementById('buyPrice').value = selectedAsset.price;
+    document.getElementById('buyModal').style.display = 'flex';
+}
+function closeBuyModal() { document.getElementById('buyModal').style.display = 'none'; }
+</script>
+
+</body>
+</html>
