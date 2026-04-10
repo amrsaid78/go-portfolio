@@ -234,15 +234,41 @@
     </div>
 
     <script src="reports.js"></script>
-    <script>
-        let portfolio = JSON.parse(localStorage.getItem('myPortfolio')) || [];
+ <script>
+// 1. إعدادات Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
+    authDomain: "stockmarketprox.firebaseapp.com",
+    projectId: "stockmarketprox",
+    storageBucket: "stockmarketprox.appspot.com",
+    messagingSenderId: "797813406491",
+    appId: "1:797813406491:web:c063e068b793925808f1be"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+
+let portfolio = []; // ستمتلئ من السحابة
 const tableBody = document.querySelector('#reportsTable tbody');
-let chartInstance = null; // عشان نعرف نحدث الشارت لما نفلتر
+let chartInstance = null;
 
 window.onload = () => {
-    renderReports();
-    initReportsChart([500, 1200, 900, 2300, 1800, 3500]); // داتا افتراضية
+    initReportsChart([0, 0, 0, 0, 0, 0]); // شارت مبدئي
+    loadPortfolioFromFirebase();
 };
+
+// 2. سحب البيانات من Firebase
+function loadPortfolioFromFirebase() {
+    db.collection("myPortfolio").onSnapshot((snapshot) => {
+        portfolio = [];
+        snapshot.forEach((doc) => {
+            portfolio.push({ id: doc.id, ...doc.data() });
+        });
+        renderReports(); // تحديث الجدول والكروت بمجرد وصول البيانات
+    });
+}
 
 function renderReports(filterDays = 'all') {
     if (!tableBody) return;
@@ -257,10 +283,10 @@ function renderReports(filterDays = 'all') {
     const today = new Date();
 
     portfolio.forEach((item, index) => {
-        const currentVal = item.qty * item.price;
+        const currentVal = (parseFloat(item.qty) || 0) * (parseFloat(item.price) || 0);
         totalValue += currentVal;
 
-        // محاكاة لنسبة الربح
+        // محاكاة لنسبة الربح (حتى نربط أسعار حقيقية)
         const simulatedPerf = Math.sin(index) * 15; 
         
         if (simulatedPerf > bestPerf) {
@@ -272,41 +298,36 @@ function renderReports(filterDays = 'all') {
             worstStockSymbol = item.symbol.toUpperCase();
         }
 
-        // توليد تاريخ
-        const date = new Date();
-        date.setDate(date.getDate() - (index * 3));
-        
-        // حساب الفارق بين الأيام عشان الفلتر
-        const diffTime = Math.abs(today - date);
+        // استخدام التاريخ المخزن أو تاريخ اليوم كافتراضي
+        const itemDate = item.date ? new Date(item.date) : new Date();
+        const diffTime = Math.abs(today - itemDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        // لو الفلتر متفعل والعملية أقدم من المدة المحددة، ما تظهرش في الجدول
-        if (filterDays !== 'all' && diffDays > filterDays) {
-            return; 
-        }
+        // فلتر الأيام
+        if (filterDays !== 'all' && diffDays > filterDays) return; 
 
-        const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        const formattedDate = itemDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
         tableBody.innerHTML += `
             <tr>
                 <td style="color: var(--text-dim);">${formattedDate}</td>
                 <td>
                     <strong>${item.market || '🇺🇸'} ${item.symbol.toUpperCase()}</strong>
-                    <span class="company-name">${item.name}</span>
+                    <span class="company-name">${item.name || ''}</span>
                 </td>
                 <td><span style="background: rgba(63, 185, 80, 0.1); color: var(--accent); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight:600;">BUY</span></td>
                 <td>${item.qty}</td>
-                <td>$${item.price.toFixed(2)}</td>
+                <td>$${parseFloat(item.price).toFixed(2)}</td>
                 <td>$${currentVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
             </tr>`;
     });
 
-    // تحديث الأرقام في الكروت
+    // تحديث أرقام الكروت العلوية
     document.getElementById('totalValueReport').innerText = `$${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     
-    // حساب الضرائب والربح الصافي (افتراضياً إن الأرباح 20% من إجمالي المحفظة لغرض المحاكاة)
-    const simulatedProfit = totalValue * 0.20;
-    const estimatedTax = simulatedProfit * 0.15; // ضريبة 15%
+    // حسابات تقديرية للضرائب والربح
+    const simulatedProfit = totalValue * 0.12; // محاكاة ربح 12%
+    const estimatedTax = simulatedProfit * 0.15; 
     const net = simulatedProfit - estimatedTax;
 
     document.getElementById('taxValue').innerText = `$${estimatedTax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
@@ -318,45 +339,40 @@ function renderReports(filterDays = 'all') {
     }
 
     if (tableBody.innerHTML === '') {
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-dim);">No transactions found for this period.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-dim);">No transactions found.</td></tr>`;
     }
 }
 
 // دالة فلترة التاريخ
 window.filterByDate = function(days, btnElement) {
-    // تغيير الكلاس الـ active للأزرار
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
     btnElement.classList.add('active');
 
-    // إعادة رسم الجدول بالفلتر الجديد
     renderReports(days);
 
-    // محاكاة تغيير الداتا في الشارت بناءً على المدة
-    let newData = [500, 1200, 900, 2300, 1800, 3500];
-    if (days === 30) newData = [200, 400, 300, 500, 450, 600];
-    if (days === 90) newData = [300, 600, 500, 1200, 1000, 1500];
-
+    // تحديث الشارت بشكل وهمي بناءً على الفلتر
+    let newData = [totalValueReport.innerText.replace(/[^0-9.]/g, '') * 0.8, totalValueReport.innerText.replace(/[^0-9.]/g, '')];
     chartInstance.data.datasets[0].data = newData;
     chartInstance.update();
 };
 
 function initReportsChart(dataPoints) {
-    const ctx = document.getElementById('cumulativePnlChart').getContext('2d');
+    const canvas = document.getElementById('cumulativePnlChart');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
     
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
             labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
             datasets: [{
-                label: 'Cumulative Profit ($)',
+                label: 'Growth ($)',
                 data: dataPoints,
                 borderColor: '#3fb950',
                 backgroundColor: 'rgba(63, 185, 80, 0.05)',
                 fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: '#3fb950'
+                tension: 0.4
             }]
         },
         options: {
@@ -371,7 +387,7 @@ function initReportsChart(dataPoints) {
     });
 }
 
-// دالة تصدير الإكسيل
+// دالة تصدير ملف الـ CSV
 window.exportTableToCSV = function() {
     let csv = [];
     const rows = document.querySelectorAll("#reportsTable tr");
@@ -384,20 +400,17 @@ window.exportTableToCSV = function() {
             data = data.replace(/"/g, '""');
             row.push('"' + data + '"');
         }
-        csv.push(row.join(","));        
+        csv.push(row.join(","));         
     }
 
     const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
     const downloadLink = document.createElement("a");
     const date = new Date().toISOString().slice(0, 10);
     
-    downloadLink.download = `Portfolio_Report_${date}.csv`;
+    downloadLink.download = `StockProX_Report_${date}.csv`;
     downloadLink.href = window.URL.createObjectURL(csvFile);
-    downloadLink.style.display = "none";
-    document.body.appendChild(downloadLink);
     downloadLink.click();
-    document.body.removeChild(downloadLink);
 }
-    </script>
+</script>
 </body>
 </html>
