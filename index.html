@@ -37,9 +37,8 @@ body {
     font-family: 'Inter', sans-serif; 
     background-color: var(--bg-dark); 
     color: var(--text-main); 
-    /* التعديل هنا: سمحنا للصفحة بالنزول */
     min-height: 100vh;
-    overflow-y: auto; 
+    overflow-y: auto; /* يسمح بنزول الصفحة بالكامل */
     direction: ltr; 
 }
 
@@ -51,24 +50,10 @@ body {
     padding: 25px 15px; 
     border-right: 1px solid var(--border); 
     flex-shrink: 0; 
-    /* جعل السايد بار ثابت في مكانه أثناء النزول */
-    position: sticky;
+    position: sticky; /* يثبت السايد بار أثناء النزول */
     top: 0;
     height: 100vh;
 }
-
-.logo { 
-    font-size: 20px; 
-    font-weight: 800; 
-    color: #fff; 
-    margin-bottom: 35px; 
-    white-space: nowrap;
-}
-
-.logo span { color: var(--accent); }
-nav ul { list-style: none; padding: 0; }
-nav li { padding: 12px 15px; color: var(--text-dim); cursor: pointer; border-radius: 8px; margin-bottom: 5px; font-size: 14px; }
-nav li.active, nav li:hover { background: #1f2937; color: #fff; }
 
 .main-content { 
     flex: 1; 
@@ -76,50 +61,15 @@ nav li.active, nav li:hover { background: #1f2937; color: #fff; }
     display: flex; 
     flex-direction: column; 
     gap: 15px; 
-    /* التعديل هنا: لغينا الارتفاع الثابت */
     min-height: 100vh;
 }
 
-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-header h1 { margin: 0; font-size: 24px; font-weight: 700; }
-header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
-.header-actions { display: flex; gap: 10px; }
-
-.add-btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-.export-btn { background: transparent; color: var(--text-dim); border: 1px solid var(--border); padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-
-.macro-bar {
-    display: flex;
-    gap: 15px;
-    background: #161b22;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 5px;
-    justify-content: space-around;
-    flex-shrink: 0;
-}
-
-.macro-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 13px;
-    padding: 4px 10px;
-    border-radius: 6px;
-}
-
-.macro-label { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.macro-value { font-weight: 700; color: #fff; margin-top: 2px; }
-
-/* Grid Layout */
+/* --- ضبط شبكة الداشبورد (Dashboard Grid) --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr; 
-    /* التعديل هنا: جعل الصفوف تتمدد تلقائياً */
-    grid-template-rows: auto; 
+    grid-template-columns: 320px 1fr 1fr; /* عمود ثابت للكروت الجانبية وعمودين مرنين للشارتات */
+    grid-template-rows: auto auto auto; /* جعل الصفوف تتمدد حسب المحتوى */
     gap: 15px;
-    flex: 1;
     padding-bottom: 40px;
 }
 
@@ -131,43 +81,53 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
     position: relative;
     display: flex;
     flex-direction: column;
+    min-height: 220px; /* ضمان طول مناسب للكروت */
 }
 
-.card-label { font-size: 11px; color: var(--text-dim); font-weight: 600; position: absolute; top: 15px; left: 20px; z-index: 5; letter-spacing: 0.5px; }
+/* توزيع العناصر داخل الشبكة بدقة لمنع اللخبطة */
+.grid-1 { grid-column: 1 / 2; grid-row: 1 / 2; } /* Net Worth */
+.grid-2 { grid-column: 2 / 3; grid-row: 1 / 2; } /* Top Chart Left */
+.grid-3 { grid-column: 3 / 4; grid-row: 1 / 2; } /* Top Chart Right */
 
-/* تنسيق الجريد ليناسب المحتوى الجديد */
-.grid-1 { grid-column: 1 / 2; }
-.grid-2 { grid-column: 2 / 3; }
-.grid-3 { grid-column: 3 / 4; }
-.grid-best, .grid-worst { grid-column: 1 / 2; }
-.grid-5 { grid-column: 2 / 4; min-height: 250px; }
-.grid-4 { grid-column: 1 / 4; min-height: 300px; }
+.grid-best { grid-column: 1 / 2; grid-row: 2 / 3; min-height: 120px !important; }
+.grid-worst { grid-column: 1 / 2; grid-row: 3 / 4; min-height: 120px !important; }
+
+.grid-5 { grid-column: 2 / 4; grid-row: 2 / 4; } /* Main Analytics Chart */
+.grid-4 { grid-column: 1 / 4; grid-row: 4 / 5; margin-top: 10px; } /* الجدول في الأسفل بالكامل */
+
+.card-label { font-size: 11px; color: var(--text-dim); font-weight: 600; position: absolute; top: 15px; left: 20px; z-index: 5; letter-spacing: 0.5px; text-transform: uppercase; }
 
 .canvas-wrapper { 
     flex: 1; 
-    min-height: 180px; 
+    width: 100%;
     margin-top: 25px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
+/* --- تحرير الجدول --- */
 .table-scroll { 
-    /* التعديل هنا: لغينا الـ Scroll الداخلي */
     overflow: visible !important; 
     max-height: none !important; 
 } 
 
 table { width: 100%; border-collapse: collapse; text-align: left; }
-th { 
-    color: var(--text-dim); 
-    font-size: 11px; 
-    font-weight: 600; 
-    text-transform: uppercase; 
-    padding-bottom: 12px; 
-    border-bottom: 1px solid var(--border); 
-}
+th { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
 td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; }
 
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 9999; }
-.modal-content { width: 360px; background: var(--card-bg); border: 1px solid var(--border); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
+/* الماكرو بار */
+.macro-bar {
+    display: flex;
+    gap: 15px;
+    background: #161b22;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+    justify-content: space-around;
+    flex-shrink: 0;
+}
 </style>
 <body>
 
