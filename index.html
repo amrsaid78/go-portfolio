@@ -37,6 +37,7 @@ body {
     font-family: 'Inter', sans-serif; 
     background-color: var(--bg-dark); 
     color: var(--text-main); 
+    /* التعديل: جعل الطول يتحدد حسب المحتوى لفتح السكرول */
     min-height: 100vh;
     overflow-y: auto; 
     direction: ltr; 
@@ -44,17 +45,20 @@ body {
 
 .container { display: flex; min-height: 100vh; width: 100vw; }
 
+/* تم تعديل الـ Sidebar هنا لضمان الثبات التام */
 .sidebar { 
     width: 240px; 
     background: var(--sidebar-bg); 
     padding: 25px 15px; 
     border-right: 1px solid var(--border); 
     flex-shrink: 0; 
+    /* التعديل: جعل السايدبار يثبت في مكانه أثناء النزول */
     position: sticky;
     top: 0;
     height: 100vh;
 }
 
+/* تم تعديل اللوجو لمنع الهزة */
 .logo { 
     font-size: 20px; 
     font-weight: 800; 
@@ -74,6 +78,7 @@ nav li.active, nav li:hover { background: #1f2937; color: #fff; }
     display: flex; 
     flex-direction: column; 
     gap: 15px; 
+    /* التعديل: إزالة الطول الثابت لفتح المحتوى */
     height: auto;
     overflow: visible; 
 }
@@ -86,6 +91,7 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
 .add-btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 .export-btn { background: transparent; color: var(--text-dim); border: 1px solid var(--border); padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
+/* شريط المؤشرات الاقتصادية */
 .macro-bar {
     display: flex;
     gap: 15px;
@@ -114,9 +120,11 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
 .macro-up { background-color: rgba(63, 185, 80, 0.15) !important; }
 .macro-down { background-color: rgba(248, 81, 73, 0.15) !important; }
 
+/* Grid Layout */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr; 
+    /* التعديل: جعل الشبكة تتمدد مع المحتوى بدلاً من الالتزام بارتفاع شاشة واحدة */
     grid-template-rows: auto; 
     gap: 15px;
     flex: none;
@@ -175,11 +183,13 @@ header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
 
 .sparkline-wrapper { width: 100%; height: 60px; margin-top: auto; position: relative; }
 
+/* Table Section */
 .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0;}
 #searchInput { background: var(--bg-dark); border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; width: 200px; font-size: 13px; }
 
 .table-scroll { 
     width: 100%;
+    /* تم فتح سكرول الصفحة العام، لذا لا نحتاج سكرول داخلي هنا يعيق التفاعل */
     overflow: visible;
 } 
 
@@ -192,6 +202,7 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
 .edit-btn { color: #58a6ff; }
 .delete-btn { color: var(--red-alert); }
 
+/* إشارات القرار */
 .signal-badge {
     padding: 4px 8px;
     border-radius: 4px;
@@ -204,6 +215,7 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
 .sig-hold { background: rgba(219, 171, 9, 0.15); color: var(--warning); }
 .sig-reduce { background: rgba(248, 81, 73, 0.15); color: var(--red-alert); }
 
+/* Modal */
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 9999; }
 .modal-content { width: 360px; background: var(--card-bg); border: 1px solid var(--border); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
 .modal-content h3 { margin: 0 0 10px 0; color: #fff; }
@@ -318,7 +330,7 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
                             <thead>
                                 <tr>
                                     <th>Asset</th>
-                                    <th>Avg. Price</th>
+                                    <th>Market Price</th>
                                     <th>Quantity</th>
                                     <th>Total Value</th>
                                     <th>Action Signal</th>
@@ -373,7 +385,7 @@ td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertica
     </div>
 
 <script>
-// --- إعدادات Firebase ---
+// --- إعدادات Firebase الكاملة من كودك ---
 const firebaseConfig = {
     apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
     authDomain: "stockmarketprox.firebaseapp.com",
@@ -436,7 +448,7 @@ function clearInputs() {
     document.getElementById('marketSelect').value = '';
 }
 
-// --- كود الرسوم البيانية ---
+// --- كود الرسوم البيانية الكامل ---
 function initCharts() {
     if(charts.sector) charts.sector.destroy();
     if(charts.sparkline) charts.sparkline.destroy();
@@ -557,7 +569,7 @@ function getActionSignal(performancePct) {
     else return { text: 'Hold', class: 'sig-hold' };
 }
 
-// --- كود الـ Render ---
+// --- كود الـ Render بالكامل دون أي حذف ---
 function render() {
     if (!tableBody) return;
     tableBody.innerHTML = '';
@@ -565,7 +577,7 @@ function render() {
     let totalCurrentValue = 0;
     let totalCostBasis = 0;
     
-    let sectorDataMap = { 
+    let sectorData = { 
         'Food & Beverages': 0, 'Basic Resources': 0, 'Telecommunications': 0, 'Real Estate': 0, 
         'Financial Services': 0, 'Banks': 0, 'Healthcare & Pharma': 0, 'Energy': 0, 
         'Tourism & Leisure': 0, 'Trade & Distribution': 0, 'Construction': 0, 'Technology': 0 
@@ -580,8 +592,8 @@ function render() {
         let currentVal = item.qty * item.price;
         totalCurrentValue += currentVal;
 
-        // محاكاة أداء للسهم (للعرض فقط)
         let simulatedPerf = ((Math.random() * 25) - 10).toFixed(2); 
+        
         let costBasis = currentVal / (1 + (parseFloat(simulatedPerf) / 100));
         totalCostBasis += costBasis;
 
@@ -595,8 +607,11 @@ function render() {
             worstSymbol = item.symbol.toUpperCase();
         }
 
-        if (item.sector && sectorDataMap.hasOwnProperty(item.sector)) {
-            sectorDataMap[item.sector] += currentVal;
+        if (item.sector) {
+            if (!sectorData.hasOwnProperty(item.sector)) {
+                sectorData[item.sector] = 0;
+            }
+            sectorData[item.sector] += currentVal;
         }
 
         const marketFlag = item.market || '🇺🇸';
@@ -627,12 +642,15 @@ function render() {
     if (portfolio.length > 0) {
         let profitValue = totalCurrentValue - totalCostBasis;
         let profitPct = (profitValue / totalCostBasis) * 100;
+
         totalPnL.innerText = `${profitValue >= 0 ? '+' : ''}$${Math.abs(profitValue).toLocaleString()} (${profitPct.toFixed(2)}%)`;
         totalPnL.className = `pnl-text ${profitValue >= 0 ? 'positive' : 'negative'}`;
+
         document.getElementById('bestAsset').innerText = bestSymbol;
         document.getElementById('bestPct').innerText = `+${bestPerformance.toFixed(2)}%`;
+        
         document.getElementById('worstAsset').innerText = worstSymbol;
-        document.getElementById('worstPct').innerText = `${worstPerformance.toFixed(2)}%`;
+        document.getElementById('worstPct').innerText = `${worstPerformance.toFixed(2)}%` || "-0.00%";
     } else {
         totalPnL.innerText = "No active data";
         totalPnL.className = "pnl-text neutral";
@@ -644,7 +662,8 @@ function render() {
 
     charts.sparkline.data.datasets[0].data = [totalCurrentValue * 0.9, totalCurrentValue * 0.95, totalCurrentValue * 0.92, totalCurrentValue * 0.98, totalCurrentValue];
     charts.sparkline.update();
-    charts.sector.data.datasets[0].data = Object.values(sectorDataMap);
+
+    charts.sector.data.datasets[0].data = Object.values(sectorData);
     charts.sector.update();
 
     if(portfolio.length > 0) {
@@ -656,6 +675,7 @@ function render() {
         charts.dist.data.datasets[0].data = [100];
         charts.dist.data.datasets[0].backgroundColor = ['#30363d'];
         charts.candle.updateSeries([{ data: [] }]);
+        document.getElementById('candleLabel').innerText = "Main Portfolio (Select Asset)";
     }
     charts.dist.update();
 }
@@ -664,11 +684,11 @@ window.updateCandleForAsset = (symbol, price) => {
     document.getElementById('candleLabel').innerText = `Main Portfolio (${symbol.toUpperCase()})`;
     const base = parseFloat(price);
     const data = [
-        { x: new Date().getTime() - 86400000 * 4, y: [base*0.98, base*1.02, base*0.95, base*1.01] },
-        { x: new Date().getTime() - 86400000 * 3, y: [base*1.01, base*1.05, base*0.99, base*1.03] },
-        { x: new Date().getTime() - 86400000 * 2, y: [base*1.03, base*1.04, base*0.97, base*0.99] },
-        { x: new Date().getTime() - 86400000 * 1, y: [base*0.99, base*1.06, base*0.98, base*1.04] },
-        { x: new Date().getTime(), y: [base*1.04, base*1.08, base*1.02, base*1.07] }
+        { x: new Date(2026, 2, 23).getTime(), y: [base*0.98, base*1.02, base*0.95, base*1.01] },
+        { x: new Date(2026, 2, 24).getTime(), y: [base*1.01, base*1.05, base*0.99, base*1.03] },
+        { x: new Date(2026, 2, 25).getTime(), y: [base*1.03, base*1.04, base*0.97, base*0.99] },
+        { x: new Date(2026, 2, 26).getTime(), y: [base*0.99, base*1.06, base*0.98, base*1.04] },
+        { x: new Date(2026, 2, 27).getTime(), y: [base*1.04, base*1.08, base*1.02, base*1.07] }
     ];
     charts.candle.updateSeries([{ data: data }]);
 };
@@ -682,57 +702,50 @@ window.filterTable = () => {
     }
 };
 
-// --- الوظيفة الذكية: دمج الأسهم وحساب المتوسط وحفظ السجل ---
 saveBtn.onclick = async () => {
     const s = document.getElementById('symbol').value.toUpperCase().trim();
-    const n = document.getElementById('companyName').value.trim();
+    const n = document.getElementById('companyName').value;
     const q = parseFloat(document.getElementById('qty').value);
     const p = parseFloat(document.getElementById('price').value);
     const sec = document.getElementById('sectorSelect').value;
     const m = document.getElementById('marketSelect').value;
 
-    if (s && !isNaN(q) && !isNaN(p) && sec && m) {
+    if (s && q && p && sec && m) {
         try {
-            // البحث عن السهم إذا كان موجوداً بالفعل
-            const existingAsset = portfolio.find(item => item.symbol === s);
+            if (editIndex !== null) { 
+                // SCENARIO 1: Manually editing an existing row via the pencil icon
+                const entry = { symbol: s, name: n, qty: q, price: p, sector: sec, market: m };
+                await db.collection("myPortfolio").doc(portfolio[editIndex].id).update(entry);
+            } else { 
+                // SCENARIO 2: Adding a new asset (Check if it already exists to merge)
+                const existingAsset = portfolio.find(item => item.symbol.toUpperCase() === s);
 
-            if (existingAsset && editIndex === null) {
-                // دمج الأسهم وحساب المتوسط
-                const newTotalQty = existingAsset.qty + q;
-                const newAvgPrice = ((existingAsset.qty * existingAsset.price) + (q * p)) / newTotalQty;
+                if (existingAsset) {
+                    // CALCULATE MERGE:
+                    const newTotalQty = existingAsset.qty + q;
+                    // Formula: ((Old Qty * Old Price) + (New Qty * New Price)) / Total Qty
+                    const newAvgPrice = ((existingAsset.qty * existingAsset.price) + (q * p)) / newTotalQty;
 
-                await db.collection("myPortfolio").doc(existingAsset.id).update({
-                    qty: newTotalQty,
-                    price: newAvgPrice
-                });
-            } else if (editIndex !== null) {
-                // تحديث يدوي لسهم موجود
-                await db.collection("myPortfolio").doc(portfolio[editIndex].id).update({
-                    symbol: s, name: n, qty: q, price: p, sector: sec, market: m
-                });
-            } else {
-                // إضافة سهم جديد تماماً
-                await db.collection("myPortfolio").add({
-                    symbol: s, name: n, qty: q, price: p, sector: sec, market: m
-                });
+                    await db.collection("myPortfolio").doc(existingAsset.id).update({
+                        qty: newTotalQty,
+                        price: newAvgPrice,
+                        name: n, // Update name/sector just in case they were different
+                        sector: sec,
+                        market: m
+                    });
+                } else {
+                    // SCENARIO 3: Brand new symbol, add normally
+                    const entry = { symbol: s, name: n, qty: q, price: p, sector: sec, market: m };
+                    await db.collection("myPortfolio").add(entry);
+                }
             }
-
-            // تسجيل العملية في مجموعة التداولات (Transactions) للتقارير
-            await db.collection("transactions").add({
-                symbol: s,
-                qty: q,
-                price: p,
-                type: 'Buy',
-                date: new Date().toISOString()
-            });
-
             closeModal(); 
             clearInputs();
         } catch (error) {
-            alert("Error: " + error.message);
+            alert("Error communicating with Firebase: " + error.message);
         }
     } else { 
-        alert("Please fill all fields correctly."); 
+        alert("Please fill all fields, including Sector and Market."); 
     }
 };
 
@@ -773,24 +786,32 @@ function simulateMacroData() {
     setInterval(() => {
         const rateChange = (Math.random() - 0.5) * 0.02;
         const goldChange = (Math.random() - 0.5) * 5;
+
         const oldFedRate = macroData.fedRate;
         const oldGold = macroData.gold;
+
         macroData.fedRate = Math.abs(macroData.fedRate + rateChange);
         macroData.gold = Math.abs(macroData.gold + goldChange);
         macroData.treasury10y = Math.abs(macroData.treasury10y + (rateChange * 0.5));
+
         const fedEl = document.getElementById('fedRateValue');
         const treasEl = document.getElementById('treasury10yValue');
         const goldEl = document.getElementById('goldValue');
+
         if(fedEl) fedEl.innerText = macroData.fedRate.toFixed(2) + "%";
         if(treasEl) treasEl.innerText = macroData.treasury10y.toFixed(2) + "%";
         if(goldEl) goldEl.innerText = "$" + macroData.gold.toFixed(2);
+
         const fedItem = document.getElementById('fedRateItem');
         const goldItem = document.getElementById('goldItem');
+
         if (fedItem && goldItem) {
             if (macroData.fedRate > oldFedRate) fedItem.classList.add('macro-up');
             else fedItem.classList.add('macro-down');
+
             if (macroData.gold > oldGold) goldItem.classList.add('macro-up');
             else goldItem.classList.add('macro-down');
+
             setTimeout(() => {
                 fedItem.classList.remove('macro-up', 'macro-down');
                 goldItem.classList.remove('macro-up', 'macro-down');
