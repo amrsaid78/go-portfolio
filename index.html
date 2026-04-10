@@ -267,165 +267,167 @@
     </div>
 
     <script>
-    // Firebase Setup
-    const firebaseConfig = {
-        apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
-        authDomain: "stockmarketprox.firebaseapp.com",
-        projectId: "stockmarketprox",
-        storageBucket: "stockmarketprox.appspot.com",
-        messagingSenderId: "797813406491",
-        appId: "1:797813406491:web:c063e068b793925808f1be"
+// Firebase Setup
+const firebaseConfig = {
+    apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
+    authDomain: "stockmarketprox.firebaseapp.com",
+    projectId: "stockmarketprox",
+    storageBucket: "stockmarketprox.appspot.com",
+    messagingSenderId: "797813406491",
+    appId: "1:797813406491:web:c063e068b793925808f1be"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let portfolio = [];
+let editIndex = null;
+let charts = {};
+
+window.onload = () => {
+    initCharts();
+    simulateMacroData();
+    db.collection("myPortfolio").onSnapshot(snap => {
+        portfolio = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        render();
+    });
+};
+
+function initCharts() {
+    const commonOpts = { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        plugins: { legend: { display: false } } 
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    
+    charts.sector = new Chart(document.getElementById('sectorChart'), {
+        type: 'doughnut',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: ['#58a6ff', '#f0883e', '#d299ff', '#f85149', '#3fb950', '#ff9f43'], cutout: '70%' }] },
+        options: commonOpts
+    });
 
-    let portfolio = [];
-    let editIndex = null;
-    let charts = {};
+    charts.dist = new Chart(document.getElementById('distChart'), {
+        type: 'doughnut',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: ['#58a6ff', '#3fb950', '#f85149', '#d299ff', '#f0883e'], cutout: '70%' }] },
+        options: commonOpts
+    });
 
-    window.onload = () => {
-        initCharts();
-        simulateMacroData();
-        db.collection("myPortfolio").onSnapshot(snap => {
-            portfolio = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-            render();
-        });
-    };
-
-    function initCharts() {
-        const commonOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-        
-        charts.sector = new Chart(document.getElementById('sectorChart'), {
-            type: 'doughnut',
-            data: { labels: [], datasets: [{ data: [], backgroundColor: ['#58a6ff', '#f0883e', '#d299ff', '#f85149', '#3fb950', '#ff9f43'], cutout: '70%' }] },
-            options: commonOpts
-        });
-
-        charts.dist = new Chart(document.getElementById('distChart'), {
-            type: 'doughnut',
-            data: { labels: [], datasets: [{ data: [], backgroundColor: ['#58a6ff', '#3fb950', '#f85149', '#d299ff', '#f0883e'], cutout: '70%' }] },
-            options: commonOpts
-        });
-
-        charts.candle = new ApexCharts(document.querySelector("#candleChart"), {
-            series: [{ data: [] }],
-            chart: { type: 'candlestick', height: '100%', toolbar: { show: false }, background: 'transparent' },
-            theme: { mode: 'dark' },
-            xaxis: { type: 'datetime' },
-            plotOptions: { candlestick: { colors: { upward: '#3fb950', downward: '#f85149' } } }
-        });
-        charts.candle.render();
-    }
-
-    function render() {
-        const tbody = document.querySelector('#mainTable tbody');
-        tbody.innerHTML = '';
-        let total = 0;
-        let sectorMap = {};
-
-        portfolio.forEach((item, i) => {
-            const val = item.qty * item.price;
-            total += val;
-            sectorMap[item.sector] = (sectorMap[item.sector] || 0) + val;
-            
-            // Random Signal for Simulation
-            const signals = [
-                {t: 'Accumulate', c: 'sig-accumulate'},
-                {t: 'Hold', c: 'sig-hold'},
-                {t: 'Reduce', c: 'sig-reduce'}
-            ];
-            const sig = signals[Math.floor(Math.random() * 3)];
-
-            tbody.innerHTML += `
-                <tr onclick="updateCandle('${item.symbol}', ${item.price})">
-                    <td><strong>${item.market} ${item.symbol}</strong><br><small style="color:var(--text-dim)">${item.name}</small></td>
-                    <td>$${parseFloat(item.price).toFixed(2)}</td>
-                    <td>${item.qty}</td>
-                    <td style="color:var(--accent); font-weight:700">$${val.toLocaleString()}</td>
-                    <td><span class="signal-badge ${sig.c}">${sig.t}</span></td>
-                    <td>
-                        <button onclick="event.stopPropagation(); editAsset(${i})" style="background:none; border:none; cursor:pointer">✏️</button>
-                        <button onclick="event.stopPropagation(); removeAsset(${i})" style="background:none; border:none; cursor:pointer">🗑️</button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        document.getElementById('totalNetWorth').innerText = `$${total.toLocaleString()}`;
-        
-        // Update Charts
-        charts.sector.data.labels = Object.keys(sectorMap);
-        charts.sector.data.datasets[0].data = Object.values(sectorMap);
-        charts.sector.update();
-
-        charts.dist.data.labels = portfolio.map(p => p.symbol);
-        charts.dist.data.datasets[0].data = portfolio.map(p => p.qty * p.price);
-        charts.dist.update();
-
-        if(portfolio.length > 0) {
-            document.getElementById('bestAsset').innerText = portfolio[0].symbol;
-            document.getElementById('worstAsset').innerText = portfolio[portfolio.length-1].symbol;
+    // --- هنا التعديل السحري لحل مشكلة الأصفار الكتير ---
+    charts.candle = new ApexCharts(document.querySelector("#candleChart"), {
+        series: [{ data: [] }],
+        chart: { type: 'candlestick', height: '100%', toolbar: { show: false }, background: 'transparent' },
+        theme: { mode: 'dark' },
+        xaxis: { type: 'datetime' },
+        yaxis: {
+            labels: {
+                formatter: function (val) {
+                    return val.toFixed(2); // لإجبار الرقم على خانتين عشريتين فقط
+                }
+            }
+        },
+        plotOptions: { 
+            candlestick: { 
+                colors: { upward: '#3fb950', downward: '#f85149' } 
+            } 
         }
+    });
+    charts.candle.render();
+}
+
+function render() {
+    const tbody = document.querySelector('#mainTable tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    let total = 0;
+    let sectorMap = {};
+
+    portfolio.forEach((item, i) => {
+        const val = item.qty * item.price;
+        total += val;
+        sectorMap[item.sector] = (sectorMap[item.sector] || 0) + val;
+        
+        tbody.innerHTML += `
+            <tr onclick="updateCandle('${item.symbol}', ${item.price})">
+                <td><strong>${item.market} ${item.symbol}</strong><br><small style="color:var(--text-dim)">${item.name}</small></td>
+                <td>$${parseFloat(item.price).toFixed(2)}</td>
+                <td>${item.qty}</td>
+                <td style="color:var(--accent); font-weight:700">$${val.toLocaleString()}</td>
+                <td><span class="signal-badge sig-hold">HOLD</span></td>
+                <td>
+                    <button onclick="event.stopPropagation(); editAsset(${i})" style="background:none; border:none; cursor:pointer">✏️</button>
+                    <button onclick="event.stopPropagation(); removeAsset(${i})" style="background:none; border:none; cursor:pointer">🗑️</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('totalNetWorth').innerText = `$${total.toLocaleString()}`;
+    
+    charts.sector.data.labels = Object.keys(sectorMap);
+    charts.sector.data.datasets[0].data = Object.values(sectorMap);
+    charts.sector.update();
+
+    charts.dist.data.labels = portfolio.map(p => p.symbol);
+    charts.dist.data.datasets[0].data = portfolio.map(p => p.qty * p.price);
+    charts.dist.update();
+}
+
+function updateCandle(sym, price) {
+    document.getElementById('candleLabel').innerText = `Performance: ${sym}`;
+    const data = [];
+    let base = parseFloat(price);
+    for(let i=0; i<10; i++) {
+        // محاكاة لحركة السعر
+        let o = base + (Math.random() - 0.5);
+        let h = o + Math.random();
+        let l = o - Math.random();
+        let c = (o + h + l) / 3;
+        data.push({ x: new Date(2026, 3, i+1).getTime(), y: [o, h, l, c] });
+        base = c;
     }
+    charts.candle.updateSeries([{ data: data }]);
+}
 
-    function updateCandle(sym, price) {
-        document.getElementById('candleLabel').innerText = `Performance: ${sym}`;
-        const data = [];
-        let base = parseFloat(price);
-        for(let i=0; i<10; i++) {
-            data.push({ x: new Date(2026, 3, i+1), y: [base, base+2, base-1, base+1] });
-            base += (Math.random() - 0.5) * 2;
-        }
-        charts.candle.updateSeries([{ data: data }]);
-    }
+function openModal() { editIndex = null; document.getElementById('addModal').style.display = 'flex'; }
+function closeModal() { document.getElementById('addModal').style.display = 'none'; }
 
-    function openModal() { editIndex = null; document.getElementById('addModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('addModal').style.display = 'none'; }
-
-    document.getElementById('saveBtn').onclick = async () => {
-        const data = {
-            symbol: document.getElementById('symbol').value.toUpperCase(),
-            name: document.getElementById('companyName').value,
-            qty: parseFloat(document.getElementById('qty').value),
-            price: parseFloat(document.getElementById('price').value),
-            market: document.getElementById('marketSelect').value,
-            sector: document.getElementById('sectorSelect').value
-        };
-        if(editIndex !== null) await db.collection("myPortfolio").doc(portfolio[editIndex].id).update(data);
-        else await db.collection("myPortfolio").add(data);
-        closeModal();
+document.getElementById('saveBtn').onclick = async () => {
+    const data = {
+        symbol: document.getElementById('symbol').value.toUpperCase(),
+        name: document.getElementById('companyName').value,
+        qty: parseFloat(document.getElementById('qty').value),
+        price: parseFloat(document.getElementById('price').value),
+        market: document.getElementById('marketSelect').value,
+        sector: document.getElementById('sectorSelect').value
     };
+    if(editIndex !== null) await db.collection("myPortfolio").doc(portfolio[editIndex].id).update(data);
+    else await db.collection("myPortfolio").add(data);
+    closeModal();
+};
 
-    window.editAsset = (i) => {
-        editIndex = i;
-        const p = portfolio[i];
-        document.getElementById('symbol').value = p.symbol;
-        document.getElementById('companyName').value = p.name;
-        document.getElementById('qty').value = p.qty;
-        document.getElementById('price').value = p.price;
-        document.getElementById('addModal').style.display = 'flex';
-    };
+window.editAsset = (i) => {
+    editIndex = i;
+    const p = portfolio[i];
+    document.getElementById('symbol').value = p.symbol;
+    document.getElementById('companyName').value = p.name;
+    document.getElementById('qty').value = p.qty;
+    document.getElementById('price').value = p.price;
+    document.getElementById('addModal').style.display = 'flex';
+};
 
-    window.removeAsset = async (i) => { if(confirm("Delete?")) await db.collection("myPortfolio").doc(portfolio[i].id).delete(); };
+window.removeAsset = async (i) => { if(confirm("Delete?")) await db.collection("myPortfolio").doc(portfolio[i].id).delete(); };
 
-    function simulateMacroData() {
-        setInterval(() => {
-            const items = ['fedRateItem', 'goldItem'];
-            const id = items[Math.floor(Math.random()*2)];
-            const el = document.getElementById(id);
+function simulateMacroData() {
+    setInterval(() => {
+        const items = ['fedRateItem', 'goldItem'];
+        const id = items[Math.floor(Math.random()*2)];
+        const el = document.getElementById(id);
+        if(el) {
             const up = Math.random() > 0.5;
             el.classList.add(up ? 'macro-up' : 'macro-down');
             setTimeout(() => el.classList.remove('macro-up', 'macro-down'), 1000);
-        }, 3000);
-    }
-
-    function exportToCSV() {
-        let csv = "Symbol,Qty,Price\n" + portfolio.map(p => `${p.symbol},${p.qty},${p.price}`).join("\n");
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'portfolio.csv'; a.click();
-    }
-    </script>
+        }
+    }, 3000);
+}
+</script>
 </body>
 </html>
