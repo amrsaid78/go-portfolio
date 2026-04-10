@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Market Pro X - Dashboard</title>
+    <title>Stock Market Pro X</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -34,7 +35,7 @@
         background-color: var(--bg-dark); 
         color: var(--text-main); 
         min-height: 100vh;
-        overflow-y: auto; /* يسمح بنزول الصفحة بالكامل */
+        overflow-y: auto; 
         direction: ltr; 
     }
 
@@ -52,7 +53,14 @@
         z-index: 1000;
     }
 
-    .logo { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 35px; white-space: nowrap; }
+    .logo { 
+        font-size: 20px; 
+        font-weight: 800; 
+        color: #fff; 
+        margin-bottom: 35px; 
+        white-space: nowrap;
+    }
+
     .logo span { color: var(--accent); }
     nav ul { list-style: none; padding: 0; }
     nav li { padding: 12px 15px; color: var(--text-dim); cursor: pointer; border-radius: 8px; margin-bottom: 5px; font-size: 14px; }
@@ -64,96 +72,159 @@
         display: flex; 
         flex-direction: column; 
         gap: 15px; 
+        min-width: 0;
     }
 
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        flex-shrink: 0; 
+        margin-bottom: 10px;
+    }
     header h1 { margin: 0; font-size: 24px; font-weight: 700; }
-    .header-actions { display: flex; gap: 10px; }
+    header p { color: var(--text-dim); margin: 3px 0 0; font-size: 13px; }
+    
+    /* إصلاح ترتيب الأزرار لترجع لمكانها الطبيعي وتكون قابلة للضغط */
+    .header-actions { 
+        display: flex; 
+        gap: 10px; 
+        position: relative;
+        z-index: 2000; 
+    }
 
-    .add-btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-    .add-btn:hover { opacity: 0.8; }
+    .add-btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
     .export-btn { background: transparent; color: var(--text-dim); border: 1px solid var(--border); padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
     .macro-bar {
         display: flex;
-        justify-content: space-around;
-        background: var(--card-bg);
+        gap: 15px;
+        background: #161b22;
         border: 1px solid var(--border);
         border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 10px;
+        padding: 10px 15px;
+        margin-bottom: 5px;
+        justify-content: space-around;
+        flex-shrink: 0;
     }
-    .macro-item { display: flex; flex-direction: column; align-items: center; transition: background 0.3s; padding: 5px 15px; border-radius: 6px; }
-    .macro-label { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; }
-    .macro-value { font-weight: 700; color: #fff; margin-top: 2px; }
-    .macro-up { background-color: rgba(63, 185, 80, 0.2); }
-    .macro-down { background-color: rgba(248, 81, 73, 0.2); }
 
-    /* --- ضبط نظام الـ Grid ليكون مطابق للصورة 3 --- */
+    .macro-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 13px;
+        transition: background-color 0.3s ease;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+
+    .macro-label { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .macro-value { font-weight: 700; color: #fff; margin-top: 2px; }
+
+    .macro-up { background-color: rgba(63, 185, 80, 0.15) !important; }
+    .macro-down { background-color: rgba(248, 81, 73, 0.15) !important; }
+
+    /* --- Grid Layout (تصحيح بناءً على الصورة 3) --- */
     .dashboard-grid {
         display: grid;
         grid-template-columns: 350px 1fr 1fr; 
-        grid-template-rows: auto auto auto;
+        grid-template-rows: auto auto auto; 
         gap: 15px;
         padding-bottom: 30px;
     }
 
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; display: flex; flex-direction: column; min-height: 180px; }
-    .card-label { font-size: 11px; color: var(--text-dim); font-weight: 600; position: absolute; top: 15px; left: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card { 
+        background: var(--card-bg); 
+        border: 1px solid var(--border); 
+        border-radius: 12px; 
+        padding: 20px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; 
+    }
+
+    .card-label { font-size: 11px; color: var(--text-dim); font-weight: 600; position: absolute; top: 15px; left: 20px; z-index: 5; letter-spacing: 0.5px; }
 
     .grid-1 { grid-column: 1 / 2; grid-row: 1 / 2; }
     .grid-2 { grid-column: 2 / 3; grid-row: 1 / 2; }
     .grid-3 { grid-column: 3 / 4; grid-row: 1 / 2; }
 
-    .grid-best { grid-column: 1 / 2; grid-row: 2 / 3; min-height: 130px !important; }
-    .grid-worst { grid-column: 1 / 2; grid-row: 3 / 4; min-height: 130px !important; }
+    .grid-best { grid-column: 1 / 2; grid-row: 2 / 3; min-height: 120px !important; }
+    .grid-worst { grid-column: 1 / 2; grid-row: 3 / 4; min-height: 120px !important; }
 
-    .grid-5 { grid-column: 2 / 4; grid-row: 2 / 4; min-height: 300px; }
-    .grid-4 { grid-column: 1 / 4; grid-row: 4 / 5; margin-top: 10px; min-height: auto; }
+    .grid-5 { grid-column: 2 / 4; grid-row: 2 / 4; min-height: 350px; }
+    .grid-4 { grid-column: 1 / 4; grid-row: 4 / 5; min-height: 250px; margin-top: 10px; }
 
-    .canvas-wrapper { flex: 1; width: 100%; margin-top: 25px; display: flex; justify-content: center; align-items: center; }
-    
-    .net-worth-content { text-align: center; margin-top: 30px; }
+    .canvas-wrapper { 
+        flex: 1; 
+        width: 100%; 
+        height: 100%; 
+        margin-top: 25px; 
+        position: relative; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .canvas-wrapper canvas { 
+        max-width: 100% !important; 
+        max-height: 220px !important; 
+    }
+
+    .net-worth-card { justify-content: space-between; align-items: center; padding-top: 40px; }
+    .net-worth-content { text-align: center; margin-top: 20px; }
     .net-worth-content h2 { font-size: 32px; margin: 0; font-weight: 800; color: #fff; }
+
+    .kpi-content { margin-top: auto; text-align: left; padding-top: 20px; }
+    .kpi-content h3 { font-size: 20px; margin: 0 0 5px 0; color: #fff; font-weight: 700; }
+
     .pnl-text { font-size: 13px; font-weight: 600; display: block; margin-top: 5px; }
     .positive { color: var(--accent); }
     .negative { color: var(--red-alert); }
+    .neutral { color: var(--text-dim); }
+
+    .sparkline-wrapper { width: 100%; height: 60px; margin-top: auto; position: relative; }
 
     .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    #searchInput { background: var(--bg-dark); border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; width: 220px; }
+    #searchInput { background: var(--bg-dark); border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; width: 200px; font-size: 13px; }
 
-    .table-scroll { overflow: visible !important; } /* يسمح للجدول بالتمدد مع الصفحة */
-    table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; color: var(--text-dim); font-size: 11px; padding: 12px 0; border-bottom: 1px solid var(--border); text-transform: uppercase; }
-    td { padding: 15px 0; border-bottom: 1px solid #21262d; font-size: 14px; }
+    .table-scroll { flex: 1; overflow-y: visible; } 
 
-    .signal-badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 0; border-bottom: 1px solid #21262d; font-size: 14px; vertical-align: middle;}
+    .company-name { font-size: 11px; color: var(--text-dim); display: block; }
+
+    .edit-btn, .delete-btn { background: transparent; border: 1px solid var(--border); padding: 5px; border-radius: 4px; cursor: pointer; margin-right: 3px; }
+    .edit-btn { color: #58a6ff; }
+    .delete-btn { color: var(--red-alert); }
+
+    .signal-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
     .sig-accumulate { background: rgba(88, 166, 255, 0.15); color: var(--info); }
     .sig-hold { background: rgba(219, 171, 9, 0.15); color: var(--warning); }
     .sig-reduce { background: rgba(248, 81, 73, 0.15); color: var(--red-alert); }
 
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 9999; }
-    .modal-content { width: 380px; background: var(--card-bg); border: 1px solid var(--border); padding: 30px; border-radius: 12px; display: flex; flex-direction: column; gap: 12px; }
-    .modal-content input, .modal-content select { width: 100%; padding: 12px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 9999; }
+    .modal-content { width: 360px; background: var(--card-bg); border: 1px solid var(--border); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .modal-content h3 { margin: 0 0 10px 0; color: #fff; }
+    .modal-content input, .modal-content select { width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; border-radius: 6px; }
     .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
-    .save-btn { flex: 1; background: var(--accent); border: none; color: #fff; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; }
-    .cancel-btn { flex: 1; background: var(--border); border: none; color: #fff; padding: 12px; border-radius: 6px; cursor: pointer; }
+    .save-btn { flex: 1; background: var(--accent); border: none; color: #fff; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .cancel-btn { flex: 1; background: var(--border); border: none; color: #fff; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 
-
 <body>
-
     <div class="container">
         <div class="sidebar">
             <div class="logo">Stock Market <span>Pro X</span></div>
             <nav>
                 <ul>
-                <li onclick="window.location.href='index.html'" class="active">Dashboard</li>
-                <li onclick="window.location.href='analytics.html'">Analytics</li>
-                <li onclick="window.location.href='reports.html'">Reports</li>
-                <li onclick="window.location.href='watchlist.html'">Watchlist</li>
-                <li onclick="window.location.href='settings.html'">Settings</li>
+                    <li onclick="window.location.href='index.html'" class="active">Dashboard</li>
+                    <li onclick="window.location.href='analytics.html'">Analytics</li>
+                    <li onclick="window.location.href='reports.html'">Reports</li>
+                    <li onclick="window.location.href='Watchlist.html'">Watchlist</li>
+                    <li onclick="window.location.href='settings.html'">Settings</li>
                 </ul>
             </nav>
         </div>
@@ -190,7 +261,6 @@
             </div>
 
             <div class="dashboard-grid">
-                
                 <div class="card grid-1 net-worth-card">
                     <div class="card-label">TOTAL NET WORTH</div>
                     <div class="net-worth-content">
@@ -254,12 +324,10 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -273,25 +341,18 @@
             <input type="number" id="price" placeholder="Cost Price (Per Share)">
             
             <select id="marketSelect">
-                <option value="" disabled selected>Select Market (Flag)</option>
+                <option value="" disabled selected>Select Market</option>
                 <option value="🇺🇸">US Market 🇺🇸</option>
                 <option value="🇪🇬">Egyptian Market 🇪🇬</option>
             </select>
 
             <select id="sectorSelect">
                 <option value="" disabled selected>Select Sector</option>
-                <option value="Food & Beverages">Food & Beverages</option>
-                <option value="Basic Resources">Basic Resources</option>
-                <option value="Telecommunications">Telecommunications</option>
-                <option value="Real Estate">Real Estate</option>
+                <option value="Technology">Technology</option>
                 <option value="Financial Services">Financial Services</option>
                 <option value="Banks">Banks</option>
-                <option value="Healthcare & Pharma">Healthcare & Pharma</option>
                 <option value="Energy">Energy</option>
-                <option value="Tourism & Leisure">Tourism & Leisure</option>
-                <option value="Trade & Distribution">Trade & Distribution</option>
-                <option value="Construction">Construction</option>
-                <option value="Technology">Technology</option>
+                <option value="Real Estate">Real Estate</option>
             </select>
 
             <div class="modal-actions">
@@ -301,43 +362,55 @@
         </div>
     </div>
 
-    <script>
-// Firebase Setup
+<script>
+// --- إعدادات Firebase ---
 const firebaseConfig = {
     apiKey: "AIzaSyCgK3gXZpJw2A4NAhO4Z6IbIYbWBAKk4vQ",
     authDomain: "stockmarketprox.firebaseapp.com",
     projectId: "stockmarketprox",
     storageBucket: "stockmarketprox.appspot.com",
     messagingSenderId: "797813406491",
-    appId: "1:797813406491:web:c063e068b793925808f1be"
+    appId: "1:797813406491:web:c063e068b793925808f1be",
+    measurementId: "G-10V92EEPH5"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let portfolio = [];
-let editIndex = null;
-let charts = {};
+let editIndex = null; 
+let charts = {}; 
+
+const modal = document.getElementById('addModal');
+const saveBtn = document.getElementById('saveBtn');
+const tableBody = document.querySelector('#mainTable tbody');
 
 window.onload = () => {
     initCharts();
     simulateMacroData();
-    db.collection("myPortfolio").onSnapshot(snap => {
-        portfolio = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-        render();
+    db.collection("myPortfolio").onSnapshot((snapshot) => {
+        portfolio = [];
+        snapshot.forEach((doc) => {
+            let data = doc.data();
+            data.id = doc.id;
+            portfolio.push(data);
+        });
+        render(); 
     });
 };
 
 function initCharts() {
-    const commonOpts = { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { legend: { display: false } } 
-    };
-    
+    const commonOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+
     charts.sector = new Chart(document.getElementById('sectorChart'), {
         type: 'doughnut',
         data: { labels: [], datasets: [{ data: [], backgroundColor: ['#58a6ff', '#f0883e', '#d299ff', '#f85149', '#3fb950', '#ff9f43'], cutout: '70%' }] },
         options: commonOpts
+    });
+
+    charts.sparkline = new Chart(document.getElementById('miniSparkline'), {
+        type: 'line',
+        data: { labels: ['1','2','3','4','5'], datasets: [{ data: [0,0,0,0,0], borderColor: '#3fb950', fill: true, backgroundColor: 'rgba(63,185,80,0.1)', tension: 0.4, pointRadius:0 }] },
+        options: { ...commonOpts, scales: { x: { display: false }, y: { display: false } } }
     });
 
     charts.dist = new Chart(document.getElementById('distChart'), {
@@ -346,7 +419,7 @@ function initCharts() {
         options: commonOpts
     });
 
-    // --- هنا التعديل السحري لحل مشكلة الأصفار الكتير ---
+    // إصلاح مشكلة الأصفار الكثيرة في الـ Candle Chart
     charts.candle = new ApexCharts(document.querySelector("#candleChart"), {
         series: [{ data: [] }],
         chart: { type: 'candlestick', height: '100%', toolbar: { show: false }, background: 'transparent' },
@@ -355,47 +428,41 @@ function initCharts() {
         yaxis: {
             labels: {
                 formatter: function (val) {
-                    return val.toFixed(2); // لإجبار الرقم على خانتين عشريتين فقط
+                    return val.toFixed(2); 
                 }
             }
         },
-        plotOptions: { 
-            candlestick: { 
-                colors: { upward: '#3fb950', downward: '#f85149' } 
-            } 
-        }
+        plotOptions: { candlestick: { colors: { upward: '#3fb950', downward: '#f85149' } } }
     });
     charts.candle.render();
 }
 
 function render() {
-    const tbody = document.querySelector('#mainTable tbody');
-    if(!tbody) return;
-    tbody.innerHTML = '';
-    let total = 0;
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+    let totalValue = 0;
     let sectorMap = {};
 
-    portfolio.forEach((item, i) => {
-        const val = item.qty * item.price;
-        total += val;
-        sectorMap[item.sector] = (sectorMap[item.sector] || 0) + val;
-        
-        tbody.innerHTML += `
-            <tr onclick="updateCandle('${item.symbol}', ${item.price})">
-                <td><strong>${item.market} ${item.symbol}</strong><br><small style="color:var(--text-dim)">${item.name}</small></td>
+    portfolio.forEach((item, index) => {
+        const currentVal = item.qty * item.price;
+        totalValue += currentVal;
+        sectorMap[item.sector] = (sectorMap[item.sector] || 0) + currentVal;
+
+        tableBody.innerHTML += `
+            <tr onclick="updateCandle('${item.symbol}', ${item.price})" style="cursor:pointer;">
+                <td><strong>${item.market || '🇺🇸'} ${item.symbol}</strong><br><small>${item.name}</small></td>
                 <td>$${parseFloat(item.price).toFixed(2)}</td>
                 <td>${item.qty}</td>
-                <td style="color:var(--accent); font-weight:700">$${val.toLocaleString()}</td>
+                <td style="color:var(--accent); font-weight:700">$${currentVal.toLocaleString()}</td>
                 <td><span class="signal-badge sig-hold">HOLD</span></td>
                 <td>
-                    <button onclick="event.stopPropagation(); editAsset(${i})" style="background:none; border:none; cursor:pointer">✏️</button>
-                    <button onclick="event.stopPropagation(); removeAsset(${i})" style="background:none; border:none; cursor:pointer">🗑️</button>
+                    <button class="edit-btn" onclick="event.stopPropagation(); editAsset(${index})">✏️</button>
+                    <button class="delete-btn" onclick="event.stopPropagation(); remove(${index})">🗑️</button>
                 </td>
-            </tr>
-        `;
+            </tr>`;
     });
 
-    document.getElementById('totalNetWorth').innerText = `$${total.toLocaleString()}`;
+    document.getElementById('totalNetWorth').innerText = `$${totalValue.toLocaleString()}`;
     
     charts.sector.data.labels = Object.keys(sectorMap);
     charts.sector.data.datasets[0].data = Object.values(sectorMap);
@@ -406,26 +473,24 @@ function render() {
     charts.dist.update();
 }
 
-function updateCandle(sym, price) {
-    document.getElementById('candleLabel').innerText = `Performance: ${sym}`;
+window.updateCandle = (symbol, price) => {
+    document.getElementById('candleLabel').innerText = `Main Portfolio (${symbol})`;
+    const base = parseFloat(price);
     const data = [];
-    let base = parseFloat(price);
     for(let i=0; i<10; i++) {
-        // محاكاة لحركة السعر
         let o = base + (Math.random() - 0.5);
         let h = o + Math.random();
         let l = o - Math.random();
-        let c = (o + h + l) / 3;
+        let c = (o+h+l)/3;
         data.push({ x: new Date(2026, 3, i+1).getTime(), y: [o, h, l, c] });
-        base = c;
     }
     charts.candle.updateSeries([{ data: data }]);
-}
+};
 
-function openModal() { editIndex = null; document.getElementById('addModal').style.display = 'flex'; }
-function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+function openModal() { editIndex = null; modal.style.display = 'flex'; }
+function closeModal() { modal.style.display = 'none'; }
 
-document.getElementById('saveBtn').onclick = async () => {
+saveBtn.onclick = async () => {
     const data = {
         symbol: document.getElementById('symbol').value.toUpperCase(),
         name: document.getElementById('companyName').value,
@@ -434,33 +499,28 @@ document.getElementById('saveBtn').onclick = async () => {
         market: document.getElementById('marketSelect').value,
         sector: document.getElementById('sectorSelect').value
     };
-    if(editIndex !== null) await db.collection("myPortfolio").doc(portfolio[editIndex].id).update(data);
+    if (editIndex !== null) await db.collection("myPortfolio").doc(portfolio[editIndex].id).update(data);
     else await db.collection("myPortfolio").add(data);
     closeModal();
 };
 
-window.editAsset = (i) => {
-    editIndex = i;
-    const p = portfolio[i];
+window.editAsset = (index) => {
+    editIndex = index;
+    const p = portfolio[index];
     document.getElementById('symbol').value = p.symbol;
     document.getElementById('companyName').value = p.name;
     document.getElementById('qty').value = p.qty;
     document.getElementById('price').value = p.price;
-    document.getElementById('addModal').style.display = 'flex';
+    modal.style.display = 'flex';
 };
 
-window.removeAsset = async (i) => { if(confirm("Delete?")) await db.collection("myPortfolio").doc(portfolio[i].id).delete(); };
+window.remove = async (i) => { if(confirm("Delete?")) await db.collection("myPortfolio").doc(portfolio[i].id).delete(); };
 
 function simulateMacroData() {
     setInterval(() => {
-        const items = ['fedRateItem', 'goldItem'];
-        const id = items[Math.floor(Math.random()*2)];
-        const el = document.getElementById(id);
-        if(el) {
-            const up = Math.random() > 0.5;
-            el.classList.add(up ? 'macro-up' : 'macro-down');
-            setTimeout(() => el.classList.remove('macro-up', 'macro-down'), 1000);
-        }
+        const el = document.getElementById('fedRateItem');
+        el.classList.add(Math.random() > 0.5 ? 'macro-up' : 'macro-down');
+        setTimeout(() => el.classList.remove('macro-up', 'macro-down'), 1000);
     }, 3000);
 }
 </script>
